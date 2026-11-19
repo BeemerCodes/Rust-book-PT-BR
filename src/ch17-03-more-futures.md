@@ -3,6 +3,7 @@
 
 <a id="yielding"></a>
 <a id="yielding-control-to-the-runtime"></a>
+<a id="working-with-any-number-of-futures"></a>
 ### Cedendo o Controle ao Runtime
 
 Lembre-se da seção [“Nosso Primeiro Programa Assíncrono”][async-program]<!-- ignore -->

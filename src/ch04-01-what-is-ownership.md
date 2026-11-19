@@ -7,6 +7,7 @@ Como *ownership* é um conceito novo para muitos programadores, leva algum tempo
 
 Quando você entender *ownership*, terá uma base sólida para compreender os recursos que tornam o Rust único. Neste capítulo, você aprenderá *ownership* trabalhando em alguns exemplos focados em uma estrutura de dados muito comum: strings.
 
+> <a id="the-stack-and-the-heap"></a>
 > ### A Stack e a Heap
 >
 > Muitas linguagens de programação não exigem que você pense na *stack* e na *heap* com frequência. Mas em uma linguagem de programação de sistemas como Rust, o fato de um valor estar na *stack* ou na *heap* afeta como a linguagem se comporta e por que você precisa tomar certas decisões. Partes de *ownership* serão descritas em relação à *stack* e à *heap* mais adiante neste capítulo, então aqui vai uma breve explicação preparatória.

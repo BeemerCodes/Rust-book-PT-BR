@@ -2,6 +2,7 @@
 
 <a id="streams"></a>
 <a id="streams-futures-in-sequence"></a>
+<a id="composing-streams"></a>
 
 ## Streams: Futures em Sequência
 
