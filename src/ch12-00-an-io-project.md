@@ -1,43 +1,23 @@
-# An I/O Project: Building a Command Line Program
+<a id="an-io-project-building-a-command-line-program"></a>
+# Um Projeto de I/O: Construindo um Programa de Linha de Comando
 
-This chapter is a recap of the many skills you’ve learned so far and an
-exploration of a few more standard library features. We’ll build a command line
-tool that interacts with file and command line input/output to practice some of
-the Rust concepts you now have under your belt.
+Este capítulo é uma recapitulação de muitas das habilidades que você aprendeu até aqui e uma exploração de mais alguns recursos da biblioteca padrão. Vamos construir uma ferramenta de linha de comando que interage com entrada e saída (I/O) de arquivos e de linha de comando para praticar alguns dos conceitos de Rust que você já domina.
 
-Rust’s speed, safety, single binary output, and cross-platform support make it
-an ideal language for creating command line tools, so for our project, we’ll
-make our own version of the classic command line search tool `grep`
-(**g**lobally search a **r**egular **e**xpression and **p**rint). In the
-simplest use case, `grep` searches a specified file for a specified string. To
-do so, `grep` takes as its arguments a file path and a string. Then, it reads
-the file, finds lines in that file that contain the string argument, and prints
-those lines.
+A velocidade, a segurança, a geração de um único binário e o suporte multiplataforma do Rust o tornam uma linguagem ideal para criar ferramentas de linha de comando. Por isso, para o nosso projeto, faremos nossa própria versão da clássica ferramenta de busca em linha de comando `grep` (**g**lobally search a **r**egular **e**xpression and **p**rint — busca global por expressão regular e impressão). No caso de uso mais simples, o `grep` procura uma string específica em um arquivo específico. Para isso, o `grep` recebe como argumentos um caminho de arquivo e uma string. Em seguida, ele lê o arquivo, encontra as linhas desse arquivo que contêm o argumento da string e imprime essas linhas.
 
-Along the way, we’ll show how to make our command line tool use the terminal
-features that many other command line tools use. We’ll read the value of an
-environment variable to allow the user to configure the behavior of our tool.
-We’ll also print error messages to the standard error console stream (`stderr`)
-instead of standard output (`stdout`) so that, for example, the user can
-redirect successful output to a file while still seeing error messages onscreen.
+Ao longo do caminho, mostraremos como fazer nossa ferramenta de linha de comando usar recursos do terminal que muitas outras ferramentas desse tipo utilizam. Vamos ler o valor de uma variável de ambiente para permitir que o usuário configure o comportamento da nossa ferramenta. Também imprimiremos mensagens de erro no fluxo de erro padrão do console (`stderr`) em vez da saída padrão (`stdout`), para que, por exemplo, o usuário possa redirecionar a saída bem-sucedida para um arquivo enquanto continua vendo mensagens de erro na tela.
 
-One Rust community member, Andrew Gallant, has already created a fully
-featured, very fast version of `grep`, called `ripgrep`. By comparison, our
-version will be fairly simple, but this chapter will give you some of the
-background knowledge you need to understand a real-world project such as
-`ripgrep`.
+Um membro da comunidade Rust, Andrew Gallant, já criou uma versão completa e muito rápida do `grep`, chamada `ripgrep`. Em comparação, nossa versão será bem simples, mas este capítulo lhe dará o conhecimento básico necessário para entender um projeto do mundo real como o `ripgrep`.
 
-Our `grep` project will combine a number of concepts you’ve learned so far:
+Nosso projeto `grep` combinará vários conceitos que você já aprendeu até agora:
 
-- Organizing code ([Chapter 7][ch7]<!-- ignore -->)
-- Using vectors and strings ([Chapter 8][ch8]<!-- ignore -->)
-- Handling errors ([Chapter 9][ch9]<!-- ignore -->)
-- Using traits and lifetimes where appropriate ([Chapter 10][ch10]<!-- ignore -->)
-- Writing tests ([Chapter 11][ch11]<!-- ignore -->)
+- Organização de código ([Capítulo 7][ch7]<!-- ignore -->)
+- Uso de vetores e strings ([Capítulo 8][ch8]<!-- ignore -->)
+- Tratamento de erros ([Capítulo 9][ch9]<!-- ignore -->)
+- Uso de *traits* e *lifetimes* quando apropriado ([Capítulo 10][ch10]<!-- ignore -->)
+- Escrita de testes ([Capítulo 11][ch11]<!-- ignore -->)
 
-We’ll also briefly introduce closures, iterators, and trait objects, which
-[Chapter 13][ch13]<!-- ignore --> and [Chapter 18][ch18]<!-- ignore --> will
-cover in detail.
+Também apresentaremos brevemente *closures*, iteradores e *trait objects*, que o [Capítulo 13][ch13]<!-- ignore --> e o [Capítulo 18][ch18]<!-- ignore --> abordarão em detalhes.
 
 [ch7]: ch07-00-managing-growing-projects-with-packages-crates-and-modules.html
 [ch8]: ch08-00-common-collections.html

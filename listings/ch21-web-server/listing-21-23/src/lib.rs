@@ -16,13 +16,13 @@ type Job = Box<dyn FnOnce() + Send + 'static>;
 // ANCHOR: here
 impl ThreadPool {
     // ANCHOR_END: here
-    /// Create a new ThreadPool.
+    /// Cria um novo ThreadPool.
     ///
-    /// The size is the number of threads in the pool.
+    /// O tamanho (`size`) é o número de threads no pool.
     ///
-    /// # Panics
+    /// # Pânicos
     ///
-    /// The `new` function will panic if the size is zero.
+    /// A função `new` entrará em pânico se o tamanho for zero.
     // ANCHOR: here
     pub fn new(size: usize) -> ThreadPool {
         // --snip--

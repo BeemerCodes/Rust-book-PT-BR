@@ -1,33 +1,36 @@
-## Refutability: Whether a Pattern Might Fail to Match
+<a id="refutability-whether-a-pattern-might-fail-to-match"></a>
 
-Patterns come in two forms: refutable and irrefutable. Patterns that will match
-for any possible value passed are _irrefutable_. An example would be `x` in the
-statement `let x = 5;` because `x` matches anything and therefore cannot fail
-to match. Patterns that can fail to match for some possible value are
-_refutable_. An example would be `Some(x)` in the expression `if let Some(x) =
-a_value` because if the value in the `a_value` variable is `None` rather than
-`Some`, the `Some(x)` pattern will not match.
+## Refutabilidade: Se um Padrão Pode Falhar ao Corresponder
 
-Function parameters, `let` statements, and `for` loops can only accept
-irrefutable patterns because the program cannot do anything meaningful when
-values don’t match. The `if let` and `while let` expressions and the
-`let...else` statement accept refutable and irrefutable patterns, but the
-compiler warns against irrefutable patterns because, by definition, they’re
-intended to handle possible failure: The functionality of a conditional is in
-its ability to perform differently depending on success or failure.
+Padrões existem em duas formas: refutáveis e irrefutáveis. Padrões que
+corresponderão a qualquer valor possível passado são *irrefutáveis*. Um exemplo
+seria `x` na instrução `let x = 5;`, porque `x` corresponde a qualquer coisa e,
+portanto, não pode falhar na correspondência. Padrões que podem falhar na
+correspondência para algum valor possível são *refutáveis*. Um exemplo seria
+`Some(x)` na expressão `if let Some(x) = a_value`, porque se o valor na
+variável `a_value` for `None` em vez de `Some`, o padrão `Some(x)` não
+corresponderá.
 
-In general, you shouldn’t have to worry about the distinction between refutable
-and irrefutable patterns; however, you do need to be familiar with the concept
-of refutability so that you can respond when you see it in an error message. In
-those cases, you’ll need to change either the pattern or the construct you’re
-using the pattern with, depending on the intended behavior of the code.
+Parâmetros de função, instruções `let` e laços `for` só podem aceitar padrões
+irrefutáveis porque o programa não pode fazer nada significativo quando os
+valores não correspondem. As expressões `if let` e `while let` e a instrução
+`let...else` aceitam padrões refutáveis e irrefutáveis, mas o compilador alerta
+contra padrões irrefutáveis porque, por definição, eles são destinados a lidar
+com possíveis falhas: a funcionalidade de uma condicional está na sua capacidade
+de agir de forma diferente dependendo do sucesso ou da falha.
 
-Let’s look at an example of what happens when we try to use a refutable pattern
-where Rust requires an irrefutable pattern and vice versa. Listing 19-8 shows a
-`let` statement, but for the pattern, we’ve specified `Some(x)`, a refutable
-pattern. As you might expect, this code will not compile.
+Em geral, você não deveria ter que se preocupar com a distinção entre padrões
+refutáveis e irrefutáveis; no entanto, você precisa estar familiarizado com o
+conceito de refutabilidade para poder reagir quando o vir em uma mensagem de
+erro. Nesses casos, você precisará alterar o padrão ou a construção com a qual
+está usando o padrão, dependendo do comportamento pretendido do código.
 
-<Listing number="19-8" caption="Attempting to use a refutable pattern with `let`">
+Vamos ver um exemplo do que acontece quando tentamos usar um padrão refutável
+onde o Rust exige um padrão irrefutável e vice-versa. A Listagem 19-8 mostra uma
+instrução `let`, mas para o padrão especificamos `Some(x)`, um padrão
+refutável. Como você deve imaginar, esse código não compilará.
+
+<Listing number="19-8" caption="Tentando usar um padrão refutável com `let`">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch19-patterns-and-matching/listing-19-08/src/main.rs:here}}
@@ -35,26 +38,25 @@ pattern. As you might expect, this code will not compile.
 
 </Listing>
 
-If `some_option_value` were a `None` value, it would fail to match the pattern
-`Some(x)`, meaning the pattern is refutable. However, the `let` statement can
-only accept an irrefutable pattern because there is nothing valid the code can
-do with a `None` value. At compile time, Rust will complain that we’ve tried to
-use a refutable pattern where an irrefutable pattern is required:
+Se `some_option_value` fosse um valor `None`, ele falharia em corresponder ao
+padrão `Some(x)`, o que significa que o padrão é refutável. Contudo, a instrução
+`let` só pode aceitar um padrão irrefutável porque não há nada válido que o
+código possa fazer com um valor `None`. Em tempo de compilação, o Rust reclamará
+que tentamos usar um padrão refutável onde um padrão irrefutável é exigido:
 
 ```console
 {{#include ../listings/ch19-patterns-and-matching/listing-19-08/output.txt}}
 ```
 
-Because we didn’t cover (and couldn’t cover!) every valid value with the
-pattern `Some(x)`, Rust rightfully produces a compiler error.
+Como não cobrimos (e não poderíamos cobrir!) todos os valores válidos com o
+padrão `Some(x)`, o Rust corretamente produz um erro de compilação.
 
-If we have a refutable pattern where an irrefutable pattern is needed, we can
-fix it by changing the code that uses the pattern: Instead of using `let`, we
-can use `let...else`. Then, if the pattern doesn’t match, the code in the curly
-brackets will handle the value. Listing 19-9 shows how to fix the code in
-Listing 19-8.
+Se tivermos um padrão refutável onde um padrão irrefutável é necessário, podemos
+corrigir alterando o código que usa o padrão: em vez de usar `let`, podemos usar
+`let...else`. Então, se o padrão não corresponder, o código entre chaves
+tratará o valor. A Listagem 19-9 mostra como corrigir o código da Listagem 19-8.
 
-<Listing number="19-9" caption="Using `let...else` and a block with refutable patterns instead of `let`">
+<Listing number="19-9" caption="Usando `let...else` e um bloco com padrões refutáveis em vez de `let`">
 
 ```rust
 {{#rustdoc_include ../listings/ch19-patterns-and-matching/listing-19-09/src/main.rs:here}}
@@ -62,12 +64,12 @@ Listing 19-8.
 
 </Listing>
 
-We’ve given the code an out! This code is perfectly valid, although it means we
-cannot use an irrefutable pattern without receiving a warning. If we give
-`let...else` a pattern that will always match, such as `x`, as shown in Listing
-19-10, the compiler will give a warning.
+Demos uma saída ao código! Esse código é perfeitamente válido, embora signifique
+que não podemos usar um padrão irrefutável sem receber um aviso. Se dermos ao
+`let...else` um padrão que sempre corresponderá, como `x`, conforme mostrado na
+Listagem 19-10, o compilador emitirá um aviso.
 
-<Listing number="19-10" caption="Attempting to use an irrefutable pattern with `let...else`">
+<Listing number="19-10" caption="Tentando usar um padrão irrefutável com `let...else`">
 
 ```rust
 {{#rustdoc_include ../listings/ch19-patterns-and-matching/listing-19-10/src/main.rs:here}}
@@ -75,19 +77,18 @@ cannot use an irrefutable pattern without receiving a warning. If we give
 
 </Listing>
 
-Rust complains that it doesn’t make sense to use `let...else` with an
-irrefutable pattern because the `else` will never be reached:
+O Rust reclama que não faz sentido usar `let...else` com um padrão irrefutável
+porque o `else` nunca será alcançado:
 
 ```console
 {{#include ../listings/ch19-patterns-and-matching/listing-19-10/output.txt}}
 ```
 
-For this reason, match arms must use refutable patterns, except for the last
-arm, which should match any remaining values with an irrefutable pattern. Rust
-allows us to use an irrefutable pattern in a `match` with only one arm, but
-this syntax isn’t particularly useful and could be replaced with a simpler
-`let` statement.
+Por esse motivo, os braços de um `match` devem usar padrões refutáveis, exceto o
+último braço, que deve corresponder a quaisquer valores restantes com um padrão
+irrefutável. O Rust nos permite usar um padrão irrefutável em um `match` com
+apenas um braço, mas essa sintaxe não é particularmente útil e poderia ser
+substituída por uma instrução `let` mais simples.
 
-Now that you know where to use patterns and the difference between refutable
-and irrefutable patterns, let’s cover all the syntax we can use to create
-patterns.
+Agora que você sabe onde usar padrões e a diferença entre padrões refutáveis e
+irrefutáveis, vamos cobrir toda a sintaxe que podemos usar para criar padrões.

@@ -1,4 +1,4 @@
-#[derive(Debug)] // so we can inspect the state in a minute
+#[derive(Debug)] // para podermos inspecionar o estado em breve
 enum UsState {
     Alabama,
     Alaska,

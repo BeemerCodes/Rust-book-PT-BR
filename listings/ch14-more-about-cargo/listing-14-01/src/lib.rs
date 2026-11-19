@@ -1,4 +1,4 @@
-/// Adds one to the number given.
+/// Adiciona um ao número fornecido.
 ///
 /// # Examples
 ///

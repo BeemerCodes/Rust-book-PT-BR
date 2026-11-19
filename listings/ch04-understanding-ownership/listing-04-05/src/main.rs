@@ -7,7 +7,7 @@ fn main() {
 }
 
 fn calculate_length(s: String) -> (String, usize) {
-    let length = s.len(); // len() returns the length of a String
+    let length = s.len(); // len() retorna o tamanho de uma String
 
     (s, length)
 }

@@ -1,7 +1,7 @@
-extern crate trpl; // required for mdbook test
+extern crate trpl; // necessário para o mdbook test
 
 fn main() {
-    // TODO: we'll add this next!
+    // TODO: adicionaremos isso a seguir!
 }
 
 // ANCHOR: all

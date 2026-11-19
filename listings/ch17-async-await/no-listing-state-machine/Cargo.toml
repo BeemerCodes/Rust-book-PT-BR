@@ -3,6 +3,6 @@ name = "async_await"
 version = "0.1.0"
 edition = "2024"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# Veja mais chaves e suas definições em https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 trpl = { path = "../../../packages/trpl" }

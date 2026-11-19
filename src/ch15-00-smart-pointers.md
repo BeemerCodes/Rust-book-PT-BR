@@ -1,46 +1,53 @@
-# Smart Pointers
+<a id="smart-pointers"></a>
+# *Smart Pointers*
 
-A pointer is a general concept for a variable that contains an address in
-memory. This address refers to, or “points at,” some other data. The most
-common kind of pointer in Rust is a reference, which you learned about in
-Chapter 4. References are indicated by the `&` symbol and borrow the value they
-point to. They don’t have any special capabilities other than referring to
-data, and they have no overhead.
+Um ponteiro é um conceito geral para uma variável que contém um endereço na
+memória. Esse endereço se refere a, ou "aponta para", algum outro dado. O tipo
+mais comum de ponteiro em Rust é a referência, que você aprendeu no Capítulo 4.
+Referências são indicadas pelo símbolo `&` e realizam empréstimo (*borrowing*) do
+valor para o qual apontam. Elas não têm nenhuma capacidade especial além de se
+referenciar a dados, e não possuem custo adicional (*overhead*).
 
-_Smart pointers_, on the other hand, are data structures that act like a
-pointer but also have additional metadata and capabilities. The concept of
-smart pointers isn’t unique to Rust: Smart pointers originated in C++ and exist
-in other languages as well. Rust has a variety of smart pointers defined in the
-standard library that provide functionality beyond that provided by references.
-To explore the general concept, we’ll look at a couple of different examples of
-smart pointers, including a _reference counting_ smart pointer type. This
-pointer enables you to allow data to have multiple owners by keeping track of
-the number of owners and, when no owners remain, cleaning up the data.
+Os *smart pointers* (ponteiros inteligentes), por outro lado, são estruturas de
+dados que agem como um ponteiro, mas também possuem metadados adicionais e
+capacidades extras. O conceito de *smart pointers* não é exclusivo do Rust: eles
+se originaram em C++ e existem em outras linguagens também. O Rust tem uma
+variedade de *smart pointers* definidos na biblioteca padrão que fornecem
+funcionalidades além das proporcionadas pelas referências. Para explorar o
+conceito geral, vamos olhar alguns exemplos diferentes de *smart pointers*,
+incluindo um tipo de *smart pointer* com *contagem de referências* (*reference
+counting*). Esse ponteiro permite que você tenha múltiplos proprietários de um
+dado, mantendo o controle do número de proprietários e, quando não restar
+nenhum, limpando os dados.
 
-In Rust, with its concept of ownership and borrowing, there is an additional
-difference between references and smart pointers: While references only borrow
-data, in many cases smart pointers _own_ the data they point to.
+Em Rust, com seus conceitos de *ownership* e *borrowing*, há uma diferença
+adicional entre referências e *smart pointers*: enquanto referências apenas
+realizam *borrowing* dos dados, em muitos casos os *smart pointers* *possuem* os
+dados para os quais apontam.
 
-Smart pointers are usually implemented using structs. Unlike an ordinary
-struct, smart pointers implement the `Deref` and `Drop` traits. The `Deref`
-trait allows an instance of the smart pointer struct to behave like a reference
-so that you can write your code to work with either references or smart
-pointers. The `Drop` trait allows you to customize the code that’s run when an
-instance of the smart pointer goes out of scope. In this chapter, we’ll discuss
-both of these traits and demonstrate why they’re important to smart pointers.
+Os *smart pointers* geralmente são implementados usando *structs*. Ao contrário
+de uma *struct* comum, os *smart pointers* implementam as *traits* `Deref` e
+`Drop`. A *trait* `Deref` permite que uma instância da *struct* de *smart pointer*
+se comporte como uma referência, de modo que você possa escrever código que
+funcione tanto com referências quanto com *smart pointers*. A *trait* `Drop`
+permite que você personalize o código executado quando uma instância do *smart
+pointer* sai de escopo. Neste capítulo, discutiremos ambas as *traits* e
+demonstraremos por que elas são importantes para os *smart pointers*.
 
-Given that the smart pointer pattern is a general design pattern used
-frequently in Rust, this chapter won’t cover every existing smart pointer. Many
-libraries have their own smart pointers, and you can even write your own. We’ll
-cover the most common smart pointers in the standard library:
+Como o padrão de *smart pointer* é um padrão de projeto geral usado com
+frequência em Rust, este capítulo não cobrirá todos os *smart pointers*
+existentes. Muitas bibliotecas têm seus próprios *smart pointers*, e você pode
+até escrever os seus. Vamos abordar os *smart pointers* mais comuns da biblioteca
+padrão:
 
-- `Box<T>`, for allocating values on the heap
-- `Rc<T>`, a reference counting type that enables multiple ownership
-- `Ref<T>` and `RefMut<T>`, accessed through `RefCell<T>`, a type that enforces
-  the borrowing rules at runtime instead of compile time
+- `Box<T>`, para alocar valores no *heap*
+- `Rc<T>`, um tipo de *reference counting* que permite múltiplos proprietários
+- `Ref<T>` e `RefMut<T>`, acessados por meio de `RefCell<T>`, um tipo que aplica
+  as regras de *borrowing* em tempo de execução em vez de em tempo de compilação
 
-In addition, we’ll cover the _interior mutability_ pattern where an immutable
-type exposes an API for mutating an interior value. We’ll also discuss
-reference cycles: how they can leak memory and how to prevent them.
+Além disso, abordaremos o padrão de *mutabilidade interior* (*interior
+mutability*), em que um tipo imutável expõe uma API para mutar um valor interno.
+Também discutiremos *ciclos de referência* (*reference cycles*): como eles podem
+vazar memória e como evitá-los.
 
-Let’s dive in!
+Vamos começar!

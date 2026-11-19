@@ -1,16 +1,16 @@
 //! # Art
 //!
-//! A library for modeling artistic concepts.
+//! Uma biblioteca para modelar conceitos artísticos.
 
 pub mod kinds {
-    /// The primary colors according to the RYB color model.
+    /// As cores primárias de acordo com o modelo de cores RYB.
     pub enum PrimaryColor {
         Red,
         Yellow,
         Blue,
     }
 
-    /// The secondary colors according to the RYB color model.
+    /// As cores secundárias de acordo com o modelo de cores RYB.
     pub enum SecondaryColor {
         Orange,
         Green,
@@ -21,8 +21,8 @@ pub mod kinds {
 pub mod utils {
     use crate::kinds::*;
 
-    /// Combines two primary colors in equal amounts to create
-    /// a secondary color.
+    /// Combina duas cores primárias em quantidades iguais para criar
+    /// uma cor secundária.
     pub fn mix(c1: PrimaryColor, c2: PrimaryColor) -> SecondaryColor {
         SecondaryColor::Orange
     }

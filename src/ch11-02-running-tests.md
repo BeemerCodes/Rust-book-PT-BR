@@ -1,67 +1,38 @@
-## Controlling How Tests Are Run
+<a id="controlling-how-tests-are-run"></a>
 
-Just as `cargo run` compiles your code and then runs the resultant binary,
-`cargo test` compiles your code in test mode and runs the resultant test
-binary. The default behavior of the binary produced by `cargo test` is to run
-all the tests in parallel and capture output generated during test runs,
-preventing the output from being displayed and making it easier to read the
-output related to the test results. You can, however, specify command line
-options to change this default behavior.
+## Controlando Como os Testes São Executados
 
-Some command line options go to `cargo test`, and some go to the resultant test
-binary. To separate these two types of arguments, you list the arguments that
-go to `cargo test` followed by the separator `--` and then the ones that go to
-the test binary. Running `cargo test --help` displays the options you can use
-with `cargo test`, and running `cargo test -- --help` displays the options you
-can use after the separator. These options are also documented in [the “Tests”
-section of _The `rustc` Book_][tests].
+Assim como `cargo run` compila o seu código e depois roda o binário resultante, `cargo test` compila o seu código em modo de teste e roda o binário de teste resultante. O comportamento padrão do binário produzido por `cargo test` é rodar todos os testes em paralelo e capturar a saída gerada durante a execução dos testes, impedindo que ela seja exibida e facilitando a leitura da saída relacionada aos resultados dos testes. No entanto, você pode especificar opções de linha de comando para alterar esse comportamento padrão.
+
+Algumas opções de linha de comando vão para o `cargo test`, e algumas vão para o binário de teste resultante. Para separar esses dois tipos de argumentos, você lista os argumentos destinados ao `cargo test` seguidos pelo separador `--` e, em seguida, aqueles destinados ao binário de teste. Executar `cargo test --help` exibe as opções que você pode usar com `cargo test`, e executar `cargo test -- --help` exibe as opções que você pode usar após o separador. Essas opções também estão documentadas na [seção “Tests” do livro _The `rustc` Book_][tests].
 
 [tests]: https://doc.rust-lang.org/rustc/tests/index.html
 
-### Running Tests in Parallel or Consecutively
+<a id="running-tests-in-parallel-or-consecutively"></a>
 
-When you run multiple tests, by default they run in parallel using threads,
-meaning they finish running more quickly and you get feedback sooner. Because
-the tests are running at the same time, you must make sure your tests don’t
-depend on each other or on any shared state, including a shared environment,
-such as the current working directory or environment variables.
+### Executando Testes em Paralelo ou Consecutivamente
 
-For example, say each of your tests runs some code that creates a file on disk
-named _test-output.txt_ and writes some data to that file. Then, each test
-reads the data in that file and asserts that the file contains a particular
-value, which is different in each test. Because the tests run at the same time,
-one test might overwrite the file in the time between when another test is
-writing and reading the file. The second test will then fail, not because the
-code is incorrect but because the tests have interfered with each other while
-running in parallel. One solution is to make sure each test writes to a
-different file; another solution is to run the tests one at a time.
+Quando você executa múltiplos testes, por padrão eles rodam em paralelo usando *threads*, o que significa que eles terminam mais rápido e você obtém feedback mais cedo. Como os testes estão rodando ao mesmo tempo, você deve garantir que seus testes não dependam uns dos outros nem de qualquer estado compartilhado, incluindo um ambiente compartilhado, como o diretório de trabalho atual ou variáveis de ambiente.
 
-If you don’t want to run the tests in parallel or if you want more fine-grained
-control over the number of threads used, you can send the `--test-threads` flag
-and the number of threads you want to use to the test binary. Take a look at
-the following example:
+Por exemplo, digamos que cada um dos seus testes execute algum código que cria um arquivo no disco chamado _test-output.txt_ e grava alguns dados nele. Em seguida, cada teste lê os dados desse arquivo e assegura que ele contenha um determinado valor, que é diferente em cada teste. Como os testes rodam ao mesmo tempo, um teste pode sobrescrever o arquivo no intervalo de tempo entre outro teste gravar e ler o arquivo. O segundo teste falhará, não porque o código está incorreto, mas porque os testes interferiram uns com os outros enquanto rodavam em paralelo. Uma solução é garantir que cada teste grave em um arquivo diferente; outra solução é rodar os testes um de cada vez.
+
+Se você não quiser rodar os testes em paralelo ou se quiser um controle mais refinado sobre o número de *threads* utilizadas, você pode enviar a *flag* `--test-threads` e o número de *threads* que deseja usar para o binário de teste. Veja o seguinte exemplo:
 
 ```console
 $ cargo test -- --test-threads=1
 ```
 
-We set the number of test threads to `1`, telling the program not to use any
-parallelism. Running the tests using one thread will take longer than running
-them in parallel, but the tests won’t interfere with each other if they share
-state.
+Definimos o número de *threads* de teste para `1`, dizendo ao programa para não usar nenhum paralelismo. Executar os testes usando uma única *thread* levará mais tempo do que executá-los em paralelo, mas os testes não interferirão uns com os outros caso compartilhem estado.
 
-### Showing Function Output
+<a id="showing-function-output"></a>
 
-By default, if a test passes, Rust’s test library captures anything printed to
-standard output. For example, if we call `println!` in a test and the test
-passes, we won’t see the `println!` output in the terminal; we’ll see only the
-line that indicates the test passed. If a test fails, we’ll see whatever was
-printed to standard output with the rest of the failure message.
+### Exibindo a Saída de Funções
 
-As an example, Listing 11-10 has a silly function that prints the value of its
-parameter and returns 10, as well as a test that passes and a test that fails.
+Por padrão, se um teste passar, a biblioteca de testes do Rust captura qualquer coisa impressa na saída padrão. Por exemplo, se chamarmos `println!` em um teste e o teste passar, não veremos a saída de `println!` no terminal; veremos apenas a linha que indica que o teste passou. Se um teste falhar, veremos o que quer que tenha sido impresso na saída padrão junto com o restante da mensagem de falha.
 
-<Listing number="11-10" file-name="src/lib.rs" caption="Tests for a function that calls `println!`">
+Como exemplo, a Listagem 11-10 possui uma função boba que imprime o valor do seu parâmetro e retorna 10, bem como um teste que passa e um teste que falha.
+
+<Listing number="11-10" file-name="src/lib.rs" caption="Testes para uma função que chama `println!`">
 
 ```rust,panics,noplayground
 {{#rustdoc_include ../listings/ch11-writing-automated-tests/listing-11-10/src/lib.rs}}
@@ -69,42 +40,35 @@ parameter and returns 10, as well as a test that passes and a test that fails.
 
 </Listing>
 
-When we run these tests with `cargo test`, we’ll see the following output:
+Quando executamos esses testes com `cargo test`, vemos a seguinte saída:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/listing-11-10/output.txt}}
 ```
 
-Note that nowhere in this output do we see `I got the value 4`, which is
-printed when the test that passes runs. That output has been captured. The
-output from the test that failed, `I got the value 8`, appears in the section
-of the test summary output, which also shows the cause of the test failure.
+Observe que em nenhum lugar dessa saída vemos `I got the value 4`, que é impresso quando o teste que passa executa. Essa saída foi capturada. A saída do teste que falhou, `I got the value 8`, aparece na seção do resumo de saída dos testes, que também mostra a causa da falha do teste.
 
-If we want to see printed values for passing tests as well, we can tell Rust to
-also show the output of successful tests with `--show-output`:
+Se quisermos ver os valores impressos também para testes que passam, podemos dizer ao Rust para exibir a saída de testes bem-sucedidos com `--show-output`:
 
 ```console
 $ cargo test -- --show-output
 ```
 
-When we run the tests in Listing 11-10 again with the `--show-output` flag, we
-see the following output:
+Quando executamos os testes na Listagem 11-10 novamente com a *flag* `--show-output`, vemos a seguinte saída:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/output-only-01-show-output/output.txt}}
 ```
 
-### Running a Subset of Tests by Name
+<a id="running-a-subset-of-tests-by-name"></a>
 
-Running a full test suite can sometimes take a long time. If you’re working on
-code in a particular area, you might want to run only the tests pertaining to
-that code. You can choose which tests to run by passing `cargo test` the name
-or names of the test(s) you want to run as an argument.
+### Executando um Subconjunto de Testes por Nome
 
-To demonstrate how to run a subset of tests, we’ll first create three tests for
-our `add_two` function, as shown in Listing 11-11, and choose which ones to run.
+Executar uma suíte de testes inteira pode às vezes demorar bastante. Se você estiver trabalhando no código de uma área específica, pode querer rodar apenas os testes referentes àquele código. Você pode escolher quais testes rodar passando para o `cargo test` o nome ou os nomes do(s) teste(s) que deseja executar como argumento.
 
-<Listing number="11-11" file-name="src/lib.rs" caption="Three tests with three different names">
+Para demonstrar como executar um subconjunto de testes, primeiro criaremos três testes para a nossa função `add_two`, como mostrado na Listagem 11-11, e escolheremos quais deles executar.
+
+<Listing number="11-11" file-name="src/lib.rs" caption="Três testes com três nomes diferentes">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch11-writing-automated-tests/listing-11-11/src/lib.rs}}
@@ -112,77 +76,63 @@ our `add_two` function, as shown in Listing 11-11, and choose which ones to run.
 
 </Listing>
 
-If we run the tests without passing any arguments, as we saw earlier, all the
-tests will run in parallel:
+Se executarmos os testes sem passar nenhum argumento, como vimos antes, todos os testes rodarão em paralelo:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/listing-11-11/output.txt}}
 ```
 
-#### Running Single Tests
+<a id="running-single-tests"></a>
 
-We can pass the name of any test function to `cargo test` to run only that test:
+#### Executando Testes Individuais
+
+Podemos passar o nome de qualquer função de teste para `cargo test` para rodar apenas aquele teste:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/output-only-02-single-test/output.txt}}
 ```
 
-Only the test with the name `one_hundred` ran; the other two tests didn’t match
-that name. The test output lets us know we had more tests that didn’t run by
-displaying `2 filtered out` at the end.
+Apenas o teste com o nome `one_hundred` rodou; os outros dois testes não corresponderam a esse nome. A saída do teste nos informa que tivemos mais testes que não foram executados exibindo `2 filtered out` no final.
 
-We can’t specify the names of multiple tests in this way; only the first value
-given to `cargo test` will be used. But there is a way to run multiple tests.
+Não podemos especificar os nomes de múltiplos testes dessa maneira; apenas o primeiro valor fornecido ao `cargo test` será usado. Mas existe uma maneira de rodar múltiplos testes.
 
-#### Filtering to Run Multiple Tests
+<a id="filtering-to-run-multiple-tests"></a>
 
-We can specify part of a test name, and any test whose name matches that value
-will be run. For example, because two of our tests’ names contain `add`, we can
-run those two by running `cargo test add`:
+#### Filtrando para Executar Múltiplos Testes
+
+Podemos especificar parte de um nome de teste, e qualquer teste cujo nome corresponda a esse valor será executado. Por exemplo, como dois dos nomes dos nossos testes contêm `add`, podemos rodar esses dois executando `cargo test add`:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/output-only-03-multiple-tests/output.txt}}
 ```
 
-This command ran all tests with `add` in the name and filtered out the test
-named `one_hundred`. Also note that the module in which a test appears becomes
-part of the test’s name, so we can run all the tests in a module by filtering
-on the module’s name.
+Este comando executou todos os testes com `add` no nome e filtrou o teste chamado `one_hundred`. Observe também que o módulo em que um teste aparece se torna parte do nome do teste, portanto podemos rodar todos os testes em um módulo filtrando pelo nome do módulo.
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="ignoring-some-tests-unless-specifically-requested"></a>
+<a id="ignoring-tests-unless-specifically-requested"></a>
 
-### Ignoring Tests Unless Specifically Requested
+### Ignorando Testes a Menos que Sejam Especificamente Solicitados
 
-Sometimes a few specific tests can be very time-consuming to execute, so you
-might want to exclude them during most runs of `cargo test`. Rather than
-listing as arguments all tests you do want to run, you can instead annotate the
-time-consuming tests using the `ignore` attribute to exclude them, as shown
-here:
+Às vezes, alguns testes específicos podem ser muito demorados para serem executados, portanto você pode querer excluí-los durante a maioria das execuções do `cargo test`. Em vez de listar como argumentos todos os testes que você de fato deseja rodar, você pode, em vez disso, anotar os testes demorados usando o atributo `ignore` para excluí-los, como mostrado aqui:
 
-<span class="filename">Filename: src/lib.rs</span>
+<span class="filename">Arquivo: src/lib.rs</span>
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch11-writing-automated-tests/no-listing-11-ignore-a-test/src/lib.rs:here}}
 ```
 
-After `#[test]`, we add the `#[ignore]` line to the test we want to exclude.
-Now when we run our tests, `it_works` runs, but `expensive_test` doesn’t:
+Após `#[test]`, adicionamos a linha `#[ignore]` ao teste que queremos excluir. Agora, quando rodamos nossos testes, `it_works` é executado, mas `expensive_test` não:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/no-listing-11-ignore-a-test/output.txt}}
 ```
 
-The `expensive_test` function is listed as `ignored`. If we want to run only
-the ignored tests, we can use `cargo test -- --ignored`:
+A função `expensive_test` é listada como `ignored`. Se quisermos executar apenas os testes ignorados, podemos usar `cargo test -- --ignored`:
 
 ```console
 {{#include ../listings/ch11-writing-automated-tests/output-only-04-running-ignored/output.txt}}
 ```
 
-By controlling which tests run, you can make sure your `cargo test` results
-will be returned quickly. When you’re at a point where it makes sense to check
-the results of the `ignored` tests and you have time to wait for the results,
-you can run `cargo test -- --ignored` instead. If you want to run all tests
-whether they’re ignored or not, you can run `cargo test -- --include-ignored`.
+Ao controlar quais testes são executados, você pode garantir que os resultados do seu `cargo test` retornem rapidamente. Quando você estiver em um ponto onde faça sentido verificar os resultados dos testes `ignored` e tiver tempo para esperar pelos resultados, poderá executar `cargo test -- --ignored`. Se quiser rodar todos os testes, estejam eles ignorados ou não, você pode executar `cargo test -- --include-ignored`.

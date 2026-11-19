@@ -1,147 +1,161 @@
-## `RefCell<T>` and the Interior Mutability Pattern
+<a id="refcellt-and-the-interior-mutability-pattern"></a>
+## `RefCell<T>` e o Padrão de Mutabilidade Interior
 
-_Interior mutability_ is a design pattern in Rust that allows you to mutate
-data even when there are immutable references to that data; normally, this
-action is disallowed by the borrowing rules. To mutate data, the pattern uses
-`unsafe` code inside a data structure to bend Rust’s usual rules that govern
-mutation and borrowing. Unsafe code indicates to the compiler that we’re
-checking the rules manually instead of relying on the compiler to check them
-for us; we will discuss unsafe code more in Chapter 20.
+*Mutabilidade interior* (*interior mutability*) é um padrão de projeto em Rust
+que permite mutar dados mesmo quando há referências imutáveis para esses dados;
+normalmente, essa ação não é permitida pelas regras de *borrowing*. Para mutar
+dados, o padrão usa código `unsafe` dentro de uma estrutura de dados para
+contornar as regras usuais do Rust que regem mutação e *borrowing*. Código
+`unsafe` indica ao compilador que estamos verificando as regras manualmente em
+vez de depender do compilador para verificá-las por nós; discutiremos código
+`unsafe` com mais detalhes no Capítulo 20.
 
-We can use types that use the interior mutability pattern only when we can
-ensure that the borrowing rules will be followed at runtime, even though the
-compiler can’t guarantee that. The `unsafe` code involved is then wrapped in a
-safe API, and the outer type is still immutable.
+Podemos usar tipos que aplicam o padrão de mutabilidade interior apenas quando
+conseguimos garantir que as regras de *borrowing* serão seguidas em tempo de
+execução, mesmo que o compilador não possa garantir isso. O código `unsafe`
+envolvido é então encapsulado em uma API segura, e o tipo externo continua
+imutável.
 
-Let’s explore this concept by looking at the `RefCell<T>` type that follows the
-interior mutability pattern.
+Vamos explorar esse conceito observando o tipo `RefCell<T>`, que segue o padrão
+de mutabilidade interior.
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="enforcing-borrowing-rules-at-runtime-with-refcellt"></a>
 
-### Enforcing Borrowing Rules at Runtime
+<a id="enforcing-borrowing-rules-at-runtime"></a>
+### Aplicando Regras de *Borrowing* em Tempo de Execução
 
-Unlike `Rc<T>`, the `RefCell<T>` type represents single ownership over the data
-it holds. So, what makes `RefCell<T>` different from a type like `Box<T>`?
-Recall the borrowing rules you learned in Chapter 4:
+Diferentemente de `Rc<T>`, o tipo `RefCell<T>` representa propriedade única
+(*single ownership*) sobre os dados que armazena. Então, o que torna
+`RefCell<T>` diferente de um tipo como `Box<T>`? Relembre as regras de
+*borrowing* que você aprendeu no Capítulo 4:
 
-- At any given time, you can have _either_ one mutable reference or any number
-  of immutable references (but not both).
-- References must always be valid.
+- A qualquer momento, você pode ter *ou* uma referência mutável *ou* qualquer
+  número de referências imutáveis (mas não ambos).
+- Referências devem ser sempre válidas.
 
-With references and `Box<T>`, the borrowing rules’ invariants are enforced at
-compile time. With `RefCell<T>`, these invariants are enforced _at runtime_.
-With references, if you break these rules, you’ll get a compiler error. With
-`RefCell<T>`, if you break these rules, your program will panic and exit.
+Com referências e `Box<T>`, as invariantes das regras de *borrowing* são
+aplicadas em tempo de compilação. Com `RefCell<T>`, essas invariantes são
+aplicadas *em tempo de execução*. Com referências, se você quebrar essas regras,
+receberá um erro de compilação. Com `RefCell<T>`, se você quebrar essas regras,
+seu programa entrará em *panic* e encerrará.
 
-The advantages of checking the borrowing rules at compile time are that errors
-will be caught sooner in the development process, and there is no impact on
-runtime performance because all the analysis is completed beforehand. For those
-reasons, checking the borrowing rules at compile time is the best choice in the
-majority of cases, which is why this is Rust’s default.
+As vantagens de verificar as regras de *borrowing* em tempo de compilação são
+que os erros são capturados mais cedo no processo de desenvolvimento e não há
+impacto no desempenho em tempo de execução, pois toda a análise é concluída
+antecipadamente. Por esses motivos, verificar as regras de *borrowing* em tempo
+de compilação é a melhor escolha na maioria dos casos, e é por isso que esse é o
+padrão do Rust.
 
-The advantage of checking the borrowing rules at runtime instead is that
-certain memory-safe scenarios are then allowed, where they would’ve been
-disallowed by the compile-time checks. Static analysis, like the Rust compiler,
-is inherently conservative. Some properties of code are impossible to detect by
-analyzing the code: The most famous example is the Halting Problem, which is
-beyond the scope of this book but is an interesting topic to research.
+A vantagem de verificar as regras de *borrowing* em tempo de execução é que
+certos cenários seguros em termos de memória passam a ser permitidos, quando
+teriam sido rejeitados pelas verificações em tempo de compilação. A análise
+estática, como a do compilador Rust, é inerentemente conservadora. Algumas
+propriedades de código são impossíveis de detectar analisando o código: o
+exemplo mais famoso é o Problema da Parada (*Halting Problem*), que está além
+do escopo deste livro, mas é um tópico interessante para pesquisar.
 
-Because some analysis is impossible, if the Rust compiler can’t be sure the
-code complies with the ownership rules, it might reject a correct program; in
-this way, it’s conservative. If Rust accepted an incorrect program, users
-wouldn’t be able to trust the guarantees Rust makes. However, if Rust rejects a
-correct program, the programmer will be inconvenienced, but nothing
-catastrophic can occur. The `RefCell<T>` type is useful when you’re sure your
-code follows the borrowing rules but the compiler is unable to understand and
-guarantee that.
+Como algumas análises são impossíveis, se o compilador Rust não puder ter
+certeza de que o código cumpre as regras de *ownership*, ele pode rejeitar um
+programa correto; dessa forma, ele é conservador. Se o Rust aceitasse um
+programa incorreto, os usuários não poderiam confiar nas garantias que o Rust
+oferece. No entanto, se o Rust rejeitar um programa correto, o programador terá
+um inconveniente, mas nada catastrófico pode ocorrer. O tipo `RefCell<T>` é útil
+quando você tem certeza de que seu código segue as regras de *borrowing*, mas o
+compilador não consegue entender e garantir isso.
 
-Similar to `Rc<T>`, `RefCell<T>` is only for use in single-threaded scenarios
-and will give you a compile-time error if you try using it in a multithreaded
-context. We’ll talk about how to get the functionality of `RefCell<T>` in a
-multithreaded program in Chapter 16.
+De forma semelhante a `Rc<T>`, `RefCell<T>` é apenas para uso em cenários de
+*thread* única e gerará um erro de compilação se você tentar usá-lo em um
+contexto *multithreaded*. Falaremos sobre como obter a funcionalidade de
+`RefCell<T>` em um programa *multithreaded* no Capítulo 16.
 
-Here is a recap of the reasons to choose `Box<T>`, `Rc<T>`, or `RefCell<T>`:
+Aqui está um resumo dos motivos para escolher `Box<T>`, `Rc<T>` ou `RefCell<T>`:
 
-- `Rc<T>` enables multiple owners of the same data; `Box<T>` and `RefCell<T>`
-  have single owners.
-- `Box<T>` allows immutable or mutable borrows checked at compile time; `Rc<T>`
-  allows only immutable borrows checked at compile time; `RefCell<T>` allows
-  immutable or mutable borrows checked at runtime.
-- Because `RefCell<T>` allows mutable borrows checked at runtime, you can
-  mutate the value inside the `RefCell<T>` even when the `RefCell<T>` is
-  immutable.
+- `Rc<T>` permite múltiplos proprietários dos mesmos dados; `Box<T>` e
+  `RefCell<T>` têm proprietários únicos.
+- `Box<T>` permite *borrows* imutáveis ou mutáveis verificados em tempo de
+  compilação; `Rc<T>` permite apenas *borrows* imutáveis verificados em tempo de
+  compilação; `RefCell<T>` permite *borrows* imutáveis ou mutáveis verificados
+  em tempo de execução.
+- Como `RefCell<T>` permite *borrows* mutáveis verificados em tempo de execução,
+  você pode mutar o valor dentro de `RefCell<T>` mesmo quando o `RefCell<T>` é
+  imutável.
 
-Mutating the value inside an immutable value is the interior mutability
-pattern. Let’s look at a situation in which interior mutability is useful and
-examine how it’s possible.
+Mutar o valor dentro de um valor imutável é o padrão de mutabilidade interior.
+Vamos ver uma situação em que a mutabilidade interior é útil e examinar como ela
+é possível.
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="interior-mutability-a-mutable-borrow-to-an-immutable-value"></a>
 
-### Using Interior Mutability
+<a id="using-interior-mutability"></a>
+### Usando Mutabilidade Interior
 
-A consequence of the borrowing rules is that when you have an immutable value,
-you can’t borrow it mutably. For example, this code won’t compile:
+Uma consequência das regras de *borrowing* é que, quando você tem um valor
+imutável, não pode fazer um *borrow* mutável dele. Por exemplo, este código não
+compila:
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch15-smart-pointers/no-listing-01-cant-borrow-immutable-as-mutable/src/main.rs}}
 ```
 
-If you tried to compile this code, you’d get the following error:
+Se você tentasse compilar esse código, obteria o seguinte erro:
 
 ```console
 {{#include ../listings/ch15-smart-pointers/no-listing-01-cant-borrow-immutable-as-mutable/output.txt}}
 ```
 
-However, there are situations in which it would be useful for a value to mutate
-itself in its methods but appear immutable to other code. Code outside the
-value’s methods would not be able to mutate the value. Using `RefCell<T>` is
-one way to get the ability to have interior mutability, but `RefCell<T>`
-doesn’t get around the borrowing rules completely: The borrow checker in the
-compiler allows this interior mutability, and the borrowing rules are checked
-at runtime instead. If you violate the rules, you’ll get a `panic!` instead of
-a compiler error.
+No entanto, há situações em que seria útil que um valor se mutasse dentro de
+seus métodos, mas parecesse imutável para outros códigos. Códigos fora dos
+métodos do valor não poderiam mutar o valor. Usar `RefCell<T>` é uma maneira de
+obter mutabilidade interior, mas `RefCell<T>` não contorna as regras de
+*borrowing* completamente: o *borrow checker* no compilador permite essa
+mutabilidade interior, e as regras de *borrowing* são verificadas em tempo de
+execução. Se você violar as regras, obterá um `panic!` em vez de um erro de
+compilação.
 
-Let’s work through a practical example where we can use `RefCell<T>` to mutate
-an immutable value and see why that is useful.
+Vamos trabalhar em um exemplo prático em que podemos usar `RefCell<T>` para
+mutar um valor imutável e ver por que isso é útil.
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="a-use-case-for-interior-mutability-mock-objects"></a>
 
-#### Testing with Mock Objects
+<a id="testing-with-mock-objects"></a>
+#### Testando com Objetos *Mock*
 
-Sometimes during testing a programmer will use a type in place of another type,
-in order to observe particular behavior and assert that it’s implemented
-correctly. This placeholder type is called a _test double_. Think of it in the
-sense of a stunt double in filmmaking, where a person steps in and substitutes
-for an actor to do a particularly tricky scene. Test doubles stand in for other
-types when we’re running tests. _Mock objects_ are specific types of test
-doubles that record what happens during a test so that you can assert that the
-correct actions took place.
+Às vezes, durante os testes automatizados, um programador usa um tipo no lugar
+de outro para observar um comportamento específico e verificar se ele está
+implementado corretamente. Esse tipo substituto é chamado de *test double*.
+Pense nisso no sentido de um dublê no cinema, em que uma pessoa entra e
+substitui um ator para fazer uma cena particularmente complicada. *Test doubles*
+substituem outros tipos quando estamos executando testes. *Objetos mock* (*mock
+objects*) são tipos específicos de *test doubles* que registram o que acontece
+durante um teste para que você possa verificar se as ações corretas ocorreram.
 
-Rust doesn’t have objects in the same sense as other languages have objects,
-and Rust doesn’t have mock object functionality built into the standard library
-as some other languages do. However, you can definitely create a struct that
-will serve the same purposes as a mock object.
+O Rust não tem objetos no mesmo sentido que outras linguagens, e não tem
+funcionalidade de objetos *mock* embutida na biblioteca padrão como algumas
+outras linguagens têm. No entanto, você certamente pode criar uma *struct* que
+servirá aos mesmos propósitos de um objeto *mock*.
 
-Here’s the scenario we’ll test: We’ll create a library that tracks a value
-against a maximum value and sends messages based on how close to the maximum
-value the current value is. This library could be used to keep track of a
-user’s quota for the number of API calls they’re allowed to make, for example.
+Aqui está o cenário que vamos testar: criaremos uma biblioteca que acompanha um
+valor em relação a um valor máximo e envia mensagens com base em quão próximo o
+valor atual está do valor máximo. Essa biblioteca poderia ser usada para
+acompanhar a cota de chamadas de API que um usuário tem permissão para fazer,
+por exemplo.
 
-Our library will only provide the functionality of tracking how close to the
-maximum a value is and what the messages should be at what times. Applications
-that use our library will be expected to provide the mechanism for sending the
-messages: The application could show the message to the user directly, send an
-email, send a text message, or do something else. The library doesn’t need to
-know that detail. All it needs is something that implements a trait we’ll
-provide, called `Messenger`. Listing 15-20 shows the library code.
+Nossa biblioteca fornecerá apenas a funcionalidade de acompanhar quão próximo um
+valor está do máximo e quais mensagens devem ser enviadas em quais momentos.
+Espera-se que as aplicações que usam nossa biblioteca forneçam o mecanismo para
+enviar as mensagens: a aplicação pode mostrar a mensagem diretamente ao usuário,
+enviar um e-mail, enviar uma mensagem de texto ou fazer outra coisa. A
+biblioteca não precisa saber desse detalhe. Tudo o que ela precisa é de algo que
+implemente uma *trait* que forneceremos, chamada `Messenger`. A Listagem 15-20
+mostra o código da biblioteca.
 
-<Listing number="15-20" file-name="src/lib.rs" caption="A library to keep track of how close a value is to a maximum value and warn when the value is at certain levels">
+<Listing number="15-20" file-name="src/lib.rs" caption="Uma biblioteca para acompanhar quão próximo um valor está de um valor máximo e avisar quando o valor atinge certos níveis">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-20/src/lib.rs}}
@@ -149,25 +163,26 @@ provide, called `Messenger`. Listing 15-20 shows the library code.
 
 </Listing>
 
-One important part of this code is that the `Messenger` trait has one method
-called `send` that takes an immutable reference to `self` and the text of the
-message. This trait is the interface our mock object needs to implement so that
-the mock can be used in the same way a real object is. The other important part
-is that we want to test the behavior of the `set_value` method on the
-`LimitTracker`. We can change what we pass in for the `value` parameter, but
-`set_value` doesn’t return anything for us to make assertions on. We want to be
-able to say that if we create a `LimitTracker` with something that implements
-the `Messenger` trait and a particular value for `max`, the messenger is told
-to send the appropriate messages when we pass different numbers for `value`.
+Uma parte importante desse código é que a *trait* `Messenger` tem um método
+chamado `send` que recebe uma referência imutável a `self` e o texto da
+mensagem. Essa *trait* é a interface que nosso objeto *mock* precisa implementar
+para que o *mock* possa ser usado da mesma forma que um objeto real. A outra
+parte importante é que queremos testar o comportamento do método `set_value` em
+`LimitTracker`. Podemos mudar o que passamos para o parâmetro `value`, mas
+`set_value` não retorna nada para fazermos asserções. Queremos poder afirmar
+que, se criarmos um `LimitTracker` com algo que implementa a *trait* `Messenger`
+e um determinado valor para `max`, o mensageiro é instruído a enviar as
+mensagens apropriadas quando passamos números diferentes para `value`.
 
-We need a mock object that, instead of sending an email or text message when we
-call `send`, will only keep track of the messages it’s told to send. We can
-create a new instance of the mock object, create a `LimitTracker` that uses the
-mock object, call the `set_value` method on `LimitTracker`, and then check that
-the mock object has the messages we expect. Listing 15-21 shows an attempt to
-implement a mock object to do just that, but the borrow checker won’t allow it.
+Precisamos de um objeto *mock* que, em vez de enviar um e-mail ou mensagem de
+texto quando chamamos `send`, apenas mantenha o registro das mensagens que foi
+instruído a enviar. Podemos criar uma nova instância do objeto *mock*, criar um
+`LimitTracker` que usa o objeto *mock*, chamar o método `set_value` em
+`LimitTracker` e então verificar se o objeto *mock* contém as mensagens que
+esperamos. A Listagem 15-21 mostra uma tentativa de implementar um objeto *mock*
+para fazer exatamente isso, mas o *borrow checker* não permitirá.
 
-<Listing number="15-21" file-name="src/lib.rs" caption="An attempt to implement a `MockMessenger` that isn’t allowed by the borrow checker">
+<Listing number="15-21" file-name="src/lib.rs" caption="Uma tentativa de implementar um `MockMessenger` que não é permitida pelo *borrow checker*">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-21/src/lib.rs:here}}
@@ -175,43 +190,44 @@ implement a mock object to do just that, but the borrow checker won’t allow it
 
 </Listing>
 
-This test code defines a `MockMessenger` struct that has a `sent_messages`
-field with a `Vec` of `String` values to keep track of the messages it’s told
-to send. We also define an associated function `new` to make it convenient to
-create new `MockMessenger` values that start with an empty list of messages. We
-then implement the `Messenger` trait for `MockMessenger` so that we can give a
-`MockMessenger` to a `LimitTracker`. In the definition of the `send` method, we
-take the message passed in as a parameter and store it in the `MockMessenger`
-list of `sent_messages`.
+Esse código de teste define uma *struct* `MockMessenger` que tem um campo
+`sent_messages` com um `Vec` de valores `String` para manter o registro das
+mensagens que foi instruído a enviar. Também definimos uma função associada
+`new` para facilitar a criação de novos valores `MockMessenger` que começam com
+uma lista vazia de mensagens. Em seguida, implementamos a *trait* `Messenger`
+para `MockMessenger` para podermos passar um `MockMessenger` a um
+`LimitTracker`. Na definição do método `send`, pegamos a mensagem passada como
+parâmetro e a armazenamos na lista `sent_messages` de `MockMessenger`.
 
-In the test, we’re testing what happens when the `LimitTracker` is told to set
-`value` to something that is more than 75 percent of the `max` value. First, we
-create a new `MockMessenger`, which will start with an empty list of messages.
-Then, we create a new `LimitTracker` and give it a reference to the new
-`MockMessenger` and a `max` value of `100`. We call the `set_value` method on
-the `LimitTracker` with a value of `80`, which is more than 75 percent of 100.
-Then, we assert that the list of messages that the `MockMessenger` is keeping
-track of should now have one message in it.
+No teste, estamos testando o que acontece quando o `LimitTracker` é instruído a
+definir `value` para algo maior que 75 por cento do valor `max`. Primeiro,
+criamos um novo `MockMessenger`, que começará com uma lista vazia de mensagens.
+Em seguida, criamos um novo `LimitTracker` e passamos a ele uma referência ao
+novo `MockMessenger` e um valor `max` de `100`. Chamamos o método `set_value` no
+`LimitTracker` com um valor de `80`, que é maior que 75 por cento de 100.
+Depois, verificamos se a lista de mensagens que o `MockMessenger` está
+acompanhando agora tem uma mensagem.
 
-However, there’s one problem with this test, as shown here:
+No entanto, há um problema com esse teste, como mostrado aqui:
 
 ```console
 {{#include ../listings/ch15-smart-pointers/listing-15-21/output.txt}}
 ```
 
-We can’t modify the `MockMessenger` to keep track of the messages, because the
-`send` method takes an immutable reference to `self`. We also can’t take the
-suggestion from the error text to use `&mut self` in both the `impl` method and
-the trait definition. We do not want to change the `Messenger` trait solely for
-the sake of testing. Instead, we need to find a way to make our test code work
-correctly with our existing design.
+Não podemos modificar o `MockMessenger` para registrar as mensagens, porque o
+método `send` recebe uma referência imutável a `self`. Também não podemos
+aceitar a sugestão da mensagem de erro de usar `&mut self` tanto no método
+`impl` quanto na definição da *trait*. Não queremos alterar a *trait*
+`Messenger` apenas para fins de teste. Em vez disso, precisamos encontrar uma
+maneira de fazer nosso código de teste funcionar corretamente com nosso design
+existente.
 
-This is a situation in which interior mutability can help! We’ll store the
-`sent_messages` within a `RefCell<T>`, and then the `send` method will be able
-to modify `sent_messages` to store the messages we’ve seen. Listing 15-22 shows
-what that looks like.
+Essa é uma situação em que a mutabilidade interior pode ajudar! Armazenaremos
+`sent_messages` dentro de um `RefCell<T>`, e então o método `send` poderá
+modificar `sent_messages` para armazenar as mensagens que vimos. A Listagem
+15-22 mostra como isso fica.
 
-<Listing number="15-22" file-name="src/lib.rs" caption="Using `RefCell<T>` to mutate an inner value while the outer value is considered immutable">
+<Listing number="15-22" file-name="src/lib.rs" caption="Usando `RefCell<T>` para mutar um valor interno enquanto o valor externo é considerado imutável">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-22/src/lib.rs:here}}
@@ -219,51 +235,53 @@ what that looks like.
 
 </Listing>
 
-The `sent_messages` field is now of type `RefCell<Vec<String>>` instead of
-`Vec<String>`. In the `new` function, we create a new `RefCell<Vec<String>>`
-instance around the empty vector.
+O campo `sent_messages` agora é do tipo `RefCell<Vec<String>>` em vez de
+`Vec<String>`. Na função `new`, criamos uma nova instância de
+`RefCell<Vec<String>>` envolvendo o vetor vazio.
 
-For the implementation of the `send` method, the first parameter is still an
-immutable borrow of `self`, which matches the trait definition. We call
-`borrow_mut` on the `RefCell<Vec<String>>` in `self.sent_messages` to get a
-mutable reference to the value inside the `RefCell<Vec<String>>`, which is the
-vector. Then, we can call `push` on the mutable reference to the vector to keep
-track of the messages sent during the test.
+Na implementação do método `send`, o primeiro parâmetro continua sendo um
+*borrow* imutável de `self`, o que corresponde à definição da *trait*. Chamamos
+`borrow_mut` no `RefCell<Vec<String>>` em `self.sent_messages` para obter uma
+referência mutável ao valor dentro do `RefCell<Vec<String>>`, que é o vetor.
+Então, podemos chamar `push` na referência mutável ao vetor para registrar as
+mensagens enviadas durante o teste.
 
-The last change we have to make is in the assertion: To see how many items are
-in the inner vector, we call `borrow` on the `RefCell<Vec<String>>` to get an
-immutable reference to the vector.
+A última mudança que precisamos fazer está na asserção: para ver quantos itens
+estão no vetor interno, chamamos `borrow` no `RefCell<Vec<String>>` para obter
+uma referência imutável ao vetor.
 
-Now that you’ve seen how to use `RefCell<T>`, let’s dig into how it works!
+Agora que você viu como usar `RefCell<T>`, vamos entender como ele funciona!
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="keeping-track-of-borrows-at-runtime-with-refcellt"></a>
 
-#### Tracking Borrows at Runtime
+<a id="tracking-borrows-at-runtime"></a>
+#### Rastreando *Borrows* em Tempo de Execução
 
-When creating immutable and mutable references, we use the `&` and `&mut`
-syntax, respectively. With `RefCell<T>`, we use the `borrow` and `borrow_mut`
-methods, which are part of the safe API that belongs to `RefCell<T>`. The
-`borrow` method returns the smart pointer type `Ref<T>`, and `borrow_mut`
-returns the smart pointer type `RefMut<T>`. Both types implement `Deref`, so we
-can treat them like regular references.
+Ao criar referências imutáveis e mutáveis, usamos a sintaxe `&` e `&mut`,
+respectivamente. Com `RefCell<T>`, usamos os métodos `borrow` e `borrow_mut`,
+que fazem parte da API segura pertencente a `RefCell<T>`. O método `borrow`
+retorna o tipo de *smart pointer* `Ref<T>`, e `borrow_mut` retorna o tipo de
+*smart pointer* `RefMut<T>`. Ambos os tipos implementam `Deref`, portanto
+podemos tratá-los como referências regulares.
 
-The `RefCell<T>` keeps track of how many `Ref<T>` and `RefMut<T>` smart
-pointers are currently active. Every time we call `borrow`, the `RefCell<T>`
-increases its count of how many immutable borrows are active. When a `Ref<T>`
-value goes out of scope, the count of immutable borrows goes down by 1. Just
-like the compile-time borrowing rules, `RefCell<T>` lets us have many immutable
-borrows or one mutable borrow at any point in time.
+O `RefCell<T>` mantém o controle de quantos *smart pointers* `Ref<T>` e
+`RefMut<T>` estão ativos no momento. Cada vez que chamamos `borrow`, o
+`RefCell<T>` aumenta sua contagem de quantos *borrows* imutáveis estão ativos.
+Quando um valor `Ref<T>` sai de escopo, a contagem de *borrows* imutáveis
+diminui em 1. Assim como nas regras de *borrowing* em tempo de compilação, o
+`RefCell<T>` nos permite ter muitos *borrows* imutáveis ou um *borrow* mutável
+em qualquer momento.
 
-If we try to violate these rules, rather than getting a compiler error as we
-would with references, the implementation of `RefCell<T>` will panic at
-runtime. Listing 15-23 shows a modification of the implementation of `send` in
-Listing 15-22. We’re deliberately trying to create two mutable borrows active
-for the same scope to illustrate that `RefCell<T>` prevents us from doing this
-at runtime.
+Se tentarmos violar essas regras, em vez de receber um erro de compilação como
+aconteceria com referências, a implementação de `RefCell<T>` entrará em *panic*
+em tempo de execução. A Listagem 15-23 mostra uma modificação da implementação de
+`send` na Listagem 15-22. Estamos tentando deliberadamente criar dois *borrows*
+mutáveis ativos no mesmo escopo para ilustrar que `RefCell<T>` nos impede de
+fazer isso em tempo de execução.
 
-<Listing number="15-23" file-name="src/lib.rs" caption="Creating two mutable references in the same scope to see that `RefCell<T>` will panic">
+<Listing number="15-23" file-name="src/lib.rs" caption="Criando duas referências mutáveis no mesmo escopo para ver que `RefCell<T>` entrará em *panic*">
 
 ```rust,ignore,panics
 {{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-23/src/lib.rs:here}}
@@ -271,52 +289,55 @@ at runtime.
 
 </Listing>
 
-We create a variable `one_borrow` for the `RefMut<T>` smart pointer returned
-from `borrow_mut`. Then, we create another mutable borrow in the same way in
-the variable `two_borrow`. This makes two mutable references in the same scope,
-which isn’t allowed. When we run the tests for our library, the code in Listing
-15-23 will compile without any errors, but the test will fail:
+Criamos uma variável `one_borrow` para o *smart pointer* `RefMut<T>` retornado
+por `borrow_mut`. Em seguida, criamos outro *borrow* mutável da mesma forma na
+variável `two_borrow`. Isso cria duas referências mutáveis no mesmo escopo, o
+que não é permitido. Quando executamos os testes da nossa biblioteca, o código
+da Listagem 15-23 compilará sem erros, mas o teste falhará:
 
 ```console
 {{#include ../listings/ch15-smart-pointers/listing-15-23/output.txt}}
 ```
 
-Notice that the code panicked with the message `already borrowed:
-BorrowMutError`. This is how `RefCell<T>` handles violations of the borrowing
-rules at runtime.
+Observe que o código entrou em *panic* com a mensagem `already borrowed:
+BorrowMutError`. É assim que `RefCell<T>` lida com violações das regras de
+*borrowing* em tempo de execução.
 
-Choosing to catch borrowing errors at runtime rather than compile time, as
-we’ve done here, means you’d potentially be finding mistakes in your code later
-in the development process: possibly not until your code was deployed to
-production. Also, your code would incur a small runtime performance penalty as
-a result of keeping track of the borrows at runtime rather than compile time.
-However, using `RefCell<T>` makes it possible to write a mock object that can
-modify itself to keep track of the messages it has seen while you’re using it
-in a context where only immutable values are allowed. You can use `RefCell<T>`
-despite its trade-offs to get more functionality than regular references
-provide.
+Escolher capturar erros de *borrowing* em tempo de execução em vez de em tempo
+de compilação, como fizemos aqui, significa que você pode acabar encontrando
+erros no seu código mais tarde no processo de desenvolvimento: possivelmente
+apenas quando o código já estiver em produção. Além disso, seu código terá uma
+pequena penalidade de desempenho em tempo de execução como resultado de rastrear
+os *borrows* em tempo de execução em vez de em tempo de compilação. No entanto,
+usar `RefCell<T>` torna possível escrever um objeto *mock* que pode se modificar
+para registrar as mensagens que viu enquanto é usado em um contexto em que
+apenas valores imutáveis são permitidos. Você pode usar `RefCell<T>` apesar de
+suas contrapartidas para obter mais funcionalidade do que referências regulares
+fornecem.
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="having-multiple-owners-of-mutable-data-by-combining-rc-t-and-ref-cell-t"></a>
 <a id="allowing-multiple-owners-of-mutable-data-with-rct-and-refcellt"></a>
 
-### Allowing Multiple Owners of Mutable Data
+<a id="allowing-multiple-owners-of-mutable-data"></a>
+### Permitindo Múltiplos Proprietários de Dados Mutáveis
 
-A common way to use `RefCell<T>` is in combination with `Rc<T>`. Recall that
-`Rc<T>` lets you have multiple owners of some data, but it only gives immutable
-access to that data. If you have an `Rc<T>` that holds a `RefCell<T>`, you can
-get a value that can have multiple owners _and_ that you can mutate!
+Uma forma comum de usar `RefCell<T>` é em combinação com `Rc<T>`. Lembre-se de
+que `Rc<T>` permite que você tenha múltiplos proprietários de alguns dados, mas
+só dá acesso imutável a esses dados. Se você tiver um `Rc<T>` que armazena um
+`RefCell<T>`, poderá obter um valor que tem múltiplos proprietários *e* que você
+pode mutar!
 
-For example, recall the cons list example in Listing 15-18 where we used
-`Rc<T>` to allow multiple lists to share ownership of another list. Because
-`Rc<T>` holds only immutable values, we can’t change any of the values in the
-list once we’ve created them. Let’s add in `RefCell<T>` for its ability to
-change the values in the lists. Listing 15-24 shows that by using a
-`RefCell<T>` in the `Cons` definition, we can modify the value stored in all
-the lists.
+Por exemplo, lembre-se do exemplo da *cons list* na Listagem 15-18, em que
+usamos `Rc<T>` para permitir que múltiplas listas compartilhassem a propriedade
+de outra lista. Como `Rc<T>` armazena apenas valores imutáveis, não podemos
+alterar nenhum dos valores na lista depois de criá-los. Vamos adicionar
+`RefCell<T>` por sua capacidade de alterar os valores nas listas. A Listagem
+15-24 mostra que, usando um `RefCell<T>` na definição de `Cons`, podemos
+modificar o valor armazenado em todas as listas.
 
-<Listing number="15-24" file-name="src/main.rs" caption="Using `Rc<RefCell<i32>>` to create a `List` that we can mutate">
+<Listing number="15-24" file-name="src/main.rs" caption="Usando `Rc<RefCell<i32>>` para criar uma `List` que podemos mutar">
 
 ```rust
 {{#rustdoc_include ../listings/ch15-smart-pointers/listing-15-24/src/main.rs}}
@@ -324,38 +345,38 @@ the lists.
 
 </Listing>
 
-We create a value that is an instance of `Rc<RefCell<i32>>` and store it in a
-variable named `value` so that we can access it directly later. Then, we create
-a `List` in `a` with a `Cons` variant that holds `value`. We need to clone
-`value` so that both `a` and `value` have ownership of the inner `5` value
-rather than transferring ownership from `value` to `a` or having `a` borrow
-from `value`.
+Criamos um valor que é uma instância de `Rc<RefCell<i32>>` e o armazenamos em
+uma variável chamada `value` para podermos acessá-lo diretamente mais tarde. Em
+seguida, criamos uma `List` em `a` com uma variante `Cons` que armazena `value`.
+Precisamos clonar `value` para que tanto `a` quanto `value` tenham propriedade
+do valor interno `5`, em vez de transferir a propriedade de `value` para `a` ou
+fazer `a` realizar *borrowing* de `value`.
 
-We wrap the list `a` in an `Rc<T>` so that when we create lists `b` and `c`,
-they can both refer to `a`, which is what we did in Listing 15-18.
+Envolvemos a lista `a` em um `Rc<T>` para que, quando criarmos as listas `b` e
+`c`, ambas possam se referir a `a`, que é o que fizemos na Listagem 15-18.
 
-After we’ve created the lists in `a`, `b`, and `c`, we want to add 10 to the
-value in `value`. We do this by calling `borrow_mut` on `value`, which uses the
-automatic dereferencing feature we discussed in [“Where’s the `->`
-Operator?”][wheres-the---operator]<!-- ignore --> in Chapter 5 to dereference
-the `Rc<T>` to the inner `RefCell<T>` value. The `borrow_mut` method returns a
-`RefMut<T>` smart pointer, and we use the dereference operator on it and change
-the inner value.
+Depois de criarmos as listas em `a`, `b` e `c`, queremos adicionar 10 ao valor
+em `value`. Fazemos isso chamando `borrow_mut` em `value`, o que usa o recurso
+de desreferência automática que discutimos em ["Onde Está o Operador
+`->`?"][wheres-the---operator]<!-- ignore --> no Capítulo 5 para desreferenciar
+o `Rc<T>` até o valor interno `RefCell<T>`. O método `borrow_mut` retorna um
+*smart pointer* `RefMut<T>`, e usamos o operador de desreferência nele para
+alterar o valor interno.
 
-When we print `a`, `b`, and `c`, we can see that they all have the modified
-value of `15` rather than `5`:
+Quando imprimimos `a`, `b` e `c`, podemos ver que todos eles têm o valor
+modificado `15` em vez de `5`:
 
 ```console
 {{#include ../listings/ch15-smart-pointers/listing-15-24/output.txt}}
 ```
 
-This technique is pretty neat! By using `RefCell<T>`, we have an outwardly
-immutable `List` value. But we can use the methods on `RefCell<T>` that provide
-access to its interior mutability so that we can modify our data when we need
-to. The runtime checks of the borrowing rules protect us from data races, and
-it’s sometimes worth trading a bit of speed for this flexibility in our data
-structures. Note that `RefCell<T>` does not work for multithreaded code!
-`Mutex<T>` is the thread-safe version of `RefCell<T>`, and we’ll discuss
-`Mutex<T>` in Chapter 16.
+Essa técnica é bem legal! Usando `RefCell<T>`, temos um valor `List`
+externamente imutável. Mas podemos usar os métodos em `RefCell<T>` que fornecem
+acesso à sua mutabilidade interior para podermos modificar nossos dados quando
+precisarmos. As verificações em tempo de execução das regras de *borrowing* nos
+protegem contra corridas de dados, e às vezes vale a pena trocar um pouco de
+velocidade por essa flexibilidade em nossas estruturas de dados. Observe que
+`RefCell<T>` não funciona para código *multithreaded*! `Mutex<T>` é a versão
+*thread-safe* de `RefCell<T>`, e discutiremos `Mutex<T>` no Capítulo 16.
 
 [wheres-the---operator]: ch05-03-method-syntax.html#wheres-the---operator

@@ -15,15 +15,15 @@ fn first_word(s: &str) -> &str {
 fn main() {
     let my_string = String::from("hello world");
 
-    // first_word works on slices of `String`s
+    // first_word funciona em slices de `String`s
     let word = first_word(&my_string[..]);
 
     let my_string_literal = "hello world";
 
-    // first_word works on slices of string literals
+    // first_word funciona em slices de strings literais
     let word = first_word(&my_string_literal[..]);
 
-    // Because string literals *are* string slices already,
-    // this works too, without the slice syntax!
+    // Como strings literais *já são* slices de strings,
+    // isso também funciona, sem a sintaxe de slice!
     let word = first_word(my_string_literal);
 }

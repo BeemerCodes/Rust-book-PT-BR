@@ -1,6 +1,6 @@
 // ANCHOR: here
 fn foo(x: i32) {
-    // code goes here
+    // o código vai aqui
 }
 // ANCHOR_END: here
 

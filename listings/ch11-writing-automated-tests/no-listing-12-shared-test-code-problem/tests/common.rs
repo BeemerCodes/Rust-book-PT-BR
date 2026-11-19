@@ -1,3 +1,3 @@
 pub fn setup() {
-    // setup code specific to your library's tests would go here
+    // o código de configuração específico para os testes da sua biblioteca ficaria aqui
 }

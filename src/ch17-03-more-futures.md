@@ -2,27 +2,30 @@
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="yielding"></a>
+<a id="yielding-control-to-the-runtime"></a>
+### Cedendo o Controle ao Runtime
 
-### Yielding Control to the Runtime
+Lembre-se da seção [“Nosso Primeiro Programa Assíncrono”][async-program]<!-- ignore -->
+de que, em cada ponto de `await`, o Rust dá ao *runtime* a chance de pausar a
+tarefa e alternar para outra caso a *future* aguardada não esteja pronta. O
+inverso também é verdadeiro: o Rust *só* pausa blocos `async` e devolve o
+controle a um *runtime* em um ponto de `await`. Tudo o que está entre pontos de
+`await` é síncrono.
 
-Recall from the [“Our First Async Program”][async-program]<!-- ignore -->
-section that at each await point, Rust gives a runtime a chance to pause the
-task and switch to another one if the future being awaited isn’t ready. The
-inverse is also true: Rust _only_ pauses async blocks and hands control back to
-a runtime at an await point. Everything between await points is synchronous.
+Isso significa que, se você fizer um monte de trabalho em um bloco `async` sem
+um ponto de `await`, essa *future* impedirá quaisquer outras *futures* de
+avançarem. Às vezes você pode ouvir isso ser chamado de uma *future* causando
+*starvation* (inanição) em outras *futures*. Em alguns casos, isso pode não ser
+um grande problema. No entanto, se você estiver fazendo algum tipo de
+preparação custosa ou trabalho demorado, ou se tiver uma *future* que continuará
+realizando alguma tarefa específica indefinidamente, precisará pensar em quando
+e onde devolver o controle ao *runtime*.
 
-That means if you do a bunch of work in an async block without an await point,
-that future will block any other futures from making progress. You may sometimes
-hear this referred to as one future _starving_ other futures. In some cases,
-that may not be a big deal. However, if you are doing some kind of expensive
-setup or long-running work, or if you have a future that will keep doing some
-particular task indefinitely, you’ll need to think about when and where to hand
-control back to the runtime.
+Vamos simular uma operação demorada para ilustrar o problema de *starvation* e,
+em seguida, explorar como resolvê-lo. A Listagem 17-14 apresenta uma função
+`slow`.
 
-Let’s simulate a long-running operation to illustrate the starvation problem,
-then explore how to solve it. Listing 17-14 introduces a `slow` function.
-
-<Listing number="17-14" caption="Using `thread::sleep` to simulate slow operations" file-name="src/main.rs">
+<Listing number="17-14" caption="Usando `thread::sleep` para simular operações lentas" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-14/src/main.rs:slow}}
@@ -30,15 +33,15 @@ then explore how to solve it. Listing 17-14 introduces a `slow` function.
 
 </Listing>
 
-This code uses `std::thread::sleep` instead of `trpl::sleep` so that calling
-`slow` will block the current thread for some number of milliseconds. We can
-use `slow` to stand in for real-world operations that are both long-running and
-blocking.
+Este código usa `std::thread::sleep` em vez de `trpl::sleep`, de modo que chamar
+`slow` bloqueará a *thread* atual por uma certa quantidade de milissegundos.
+Podemos usar `slow` para representar operações do mundo real que são ao mesmo
+tempo demoradas e bloqueantes.
 
-In Listing 17-15, we use `slow` to emulate doing this kind of CPU-bound work in
-a pair of futures.
+Na Listagem 17-15, usamos `slow` para emular esse tipo de trabalho limitado por
+CPU em um par de *futures*.
 
-<Listing number="17-15" caption="Calling the `slow` function to simulate slow operations" file-name="src/main.rs">
+<Listing number="17-15" caption="Chamando a função `slow` para simular operações lentas" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-15/src/main.rs:slow-futures}}
@@ -46,8 +49,8 @@ a pair of futures.
 
 </Listing>
 
-Each future hands control back to the runtime only _after_ carrying out a bunch
-of slow operations. If you run this code, you will see this output:
+Cada *future* devolve o controle ao *runtime* somente *depois* de realizar uma
+série de operações lentas. Se você executar este código, verá esta saída:
 
 <!-- manual-regeneration
 cd listings/ch17-async-await/listing-17-15/
@@ -68,22 +71,23 @@ copy just the output
 'a' finished.
 ```
 
-As with Listing 17-5 where we used `trpl::select` to race futures fetching two
-URLs, `select` still finishes as soon as `a` is done. There’s no interleaving
-between the calls to `slow` in the two futures, though. The `a` future does all
-of its work until the `trpl::sleep` call is awaited, then the `b` future does
-all of its work until its own `trpl::sleep` call is awaited, and finally the
-`a` future completes. To allow both futures to make progress between their slow
-tasks, we need await points so we can hand control back to the runtime. That
-means we need something we can await!
+Assim como na Listagem 17-5, onde usamos `trpl::select` para colocar em disputa
+*futures* que buscavam duas URLs, `select` ainda termina assim que `a` conclui.
+Não há intercalação entre as chamadas a `slow` nas duas *futures*, porém. A
+*future* `a` faz todo o seu trabalho até que a chamada a `trpl::sleep` seja
+aguardada, depois a *future* `b` faz todo o seu trabalho até que sua própria
+chamada a `trpl::sleep` seja aguardada e, por fim, a *future* `a` termina. Para
+permitir que ambas as *futures* avancem entre suas tarefas lentas, precisamos de
+pontos de `await` para podermos devolver o controle ao *runtime*. Isso significa
+que precisamos de algo que possamos aguardar!
 
-We can already see this kind of handoff happening in Listing 17-15: if we
-removed the `trpl::sleep` at the end of the `a` future, it would complete
-without the `b` future running _at all_. Let’s try using the `trpl::sleep`
-function as a starting point for letting operations switch off making progress,
-as shown in Listing 17-16.
+Já podemos ver esse tipo de passagem de controle acontecendo na Listagem 17-15:
+se removêssemos o `trpl::sleep` no final da *future* `a`, ela terminaria sem que
+a *future* `b` executasse *nem uma vez*. Vamos tentar usar a função
+`trpl::sleep` como ponto de partida para permitir que as operações se alternem
+ao avançar, como mostrado na Listagem 17-16.
 
-<Listing number="17-16" caption="Using `trpl::sleep` to let operations switch off making progress" file-name="src/main.rs">
+<Listing number="17-16" caption="Usando `trpl::sleep` para permitir que as operações se alternem ao avançar" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-16/src/main.rs:here}}
@@ -91,8 +95,8 @@ as shown in Listing 17-16.
 
 </Listing>
 
-We’ve added `trpl::sleep` calls with await points between each call to `slow`.
-Now the two futures’ work is interleaved:
+Adicionamos chamadas a `trpl::sleep` com pontos de `await` entre cada chamada a
+`slow`. Agora o trabalho das duas *futures* é intercalado:
 
 <!-- manual-regeneration
 cd listings/ch17-async-await/listing-17-16
@@ -112,18 +116,18 @@ copy just the output
 'a' finished.
 ```
 
-The `a` future still runs for a bit before handing off control to `b`, because
-it calls `slow` before ever calling `trpl::sleep`, but after that the futures
-swap back and forth each time one of them hits an await point. In this case, we
-have done that after every call to `slow`, but we could break up the work in
-whatever way makes the most sense to us.
+A *future* `a` ainda executa um pouco antes de passar o controle para `b`,
+porque ela chama `slow` antes de chamar `trpl::sleep` pela primeira vez, mas
+depois disso as *futures* alternam entre si cada vez que uma delas atinge um
+ponto de `await`. Neste caso, fizemos isso após cada chamada a `slow`, mas
+poderíamos dividir o trabalho da maneira que fizesse mais sentido para nós.
 
-We don’t really want to _sleep_ here, though: we want to make progress as fast
-as we can. We just need to hand back control to the runtime. We can do that
-directly, using the `trpl::yield_now` function. In Listing 17-17, we replace
-all those `trpl::sleep` calls with `trpl::yield_now`.
+Na verdade, não queremos *dormir* aqui: queremos avançar o mais rápido possível.
+Só precisamos devolver o controle ao *runtime*. Podemos fazer isso diretamente
+usando a função `trpl::yield_now`. Na Listagem 17-17, substituímos todas aquelas
+chamadas a `trpl::sleep` por `trpl::yield_now`.
 
-<Listing number="17-17" caption="Using `yield_now` to let operations switch off making progress" file-name="src/main.rs">
+<Listing number="17-17" caption="Usando `yield_now` para permitir que as operações se alternem ao avançar" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-17/src/main.rs:yields}}
@@ -131,42 +135,46 @@ all those `trpl::sleep` calls with `trpl::yield_now`.
 
 </Listing>
 
-This code is both clearer about the actual intent and can be significantly
-faster than using `sleep`, because timers such as the one used by `sleep` often
-have limits on how granular they can be. The version of `sleep` we are using,
-for example, will always sleep for at least a millisecond, even if we pass it a
-`Duration` of one nanosecond. Again, modern computers are _fast_: they can do a
-lot in one millisecond!
+Este código é mais claro quanto à intenção real e pode ser significativamente
+mais rápido do que usar `sleep`, porque temporizadores como o usado por `sleep`
+muitas vezes têm limites em quão granulares podem ser. A versão de `sleep` que
+estamos usando, por exemplo, sempre dormirá por pelo menos um milissegundo,
+mesmo se passarmos a ela uma `Duration` de um nanossegundo. Mais uma vez,
+computadores modernos são *rápidos*: eles conseguem fazer muita coisa em um
+milissegundo!
 
-This means that async can be useful even for compute-bound tasks, depending on
-what else your program is doing, because it provides a useful tool for
-structuring the relationships between different parts of the program (but at a
-cost of the overhead of the async state machine). This is a form of
-_cooperative multitasking_, where each future has the power to determine when
-it hands over control via await points. Each future therefore also has the
-responsibility to avoid blocking for too long. In some Rust-based embedded
-operating systems, this is the _only_ kind of multitasking!
+Isso significa que `async` pode ser útil mesmo para tarefas limitadas por
+computação (*compute-bound*), dependendo do que mais o seu programa estiver
+fazendo, porque oferece uma ferramenta útil para estruturar as relações entre
+diferentes partes do programa (ao custo da sobrecarga da máquina de estados
+assíncrona). Essa é uma forma de *multitarefa cooperativa* (*cooperative
+multitasking*), na qual cada *future* tem o poder de determinar quando entrega o
+controle por meio de pontos de `await`. Cada *future*, portanto, também tem a
+responsabilidade de evitar bloquear por tempo demais. Em alguns sistemas
+operacionais embarcados baseados em Rust, esse é o *único* tipo de multitarefa!
 
-In real-world code, you won’t usually be alternating function calls with await
-points on every single line, of course. While yielding control in this way is
-relatively inexpensive, it’s not free. In many cases, trying to break up a
-compute-bound task might make it significantly slower, so sometimes it’s better
-for _overall_ performance to let an operation block briefly. Always
-measure to see what your code’s actual performance bottlenecks are. The
-underlying dynamic is important to keep in mind, though, if you _are_ seeing a
-lot of work happening in serial that you expected to happen concurrently!
+Em código do mundo real, você normalmente não ficará alternando chamadas de
+função com pontos de `await` em toda linha, é claro. Embora ceder o controle
+dessa forma seja relativamente barato, não é gratuito. Em muitos casos, tentar
+dividir uma tarefa limitada por computação pode torná-la significativamente mais
+lenta, então às vezes é melhor para o desempenho *geral* deixar uma operação
+bloquear brevemente. Sempre meça para ver quais são os gargalos reais de
+desempenho do seu código. A dinâmica subjacente é importante de se ter em mente,
+porém, se você *estiver* vendo muito trabalho acontecendo em série quando
+esperava que acontecesse de forma concorrente!
 
-### Building Our Own Async Abstractions
+<a id="building-our-own-async-abstractions"></a>
+### Construindo Nossas Próprias Abstrações Assíncronas
 
-We can also compose futures together to create new patterns. For example, we can
-build a `timeout` function with async building blocks we already have. When
-we’re done, the result will be another building block we could use to create
-still more async abstractions.
+Também podemos compor *futures* entre si para criar novos padrões. Por exemplo,
+podemos construir uma função `timeout` com os blocos de construção assíncronos
+que já temos. Quando terminarmos, o resultado será outro bloco de construção que
+poderemos usar para criar ainda mais abstrações assíncronas.
 
-Listing 17-18 shows how we would expect this `timeout` to work with a slow
-future.
+A Listagem 17-18 mostra como esperaríamos que esse `timeout` funcionasse com
+uma *future* lenta.
 
-<Listing number="17-18" caption="Using our imagined `timeout` to run a slow operation with a time limit" file-name="src/main.rs">
+<Listing number="17-18" caption="Usando nossa função `timeout` imaginada para executar uma operação lenta com um limite de tempo" file-name="src/main.rs">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-18/src/main.rs:here}}
@@ -174,23 +182,22 @@ future.
 
 </Listing>
 
-Let’s implement this! To begin, let’s think about the API for `timeout`:
+Vamos implementar isso! Para começar, vamos pensar na API de `timeout`:
 
-- It needs to be an async function itself so we can await it.
-- Its first parameter should be a future to run. We can make it generic to allow
-  it to work with any future.
-- Its second parameter will be the maximum time to wait. If we use a `Duration`,
-  that will make it easy to pass along to `trpl::sleep`.
-- It should return a `Result`. If the future completes successfully, the
-  `Result` will be `Ok` with the value produced by the future. If the timeout
-  elapses first, the `Result` will be `Err` with the duration that the timeout
-  waited for.
+- Ela própria precisa ser uma função `async` para que possamos aguardá-la.
+- Seu primeiro parâmetro deve ser uma *future* a ser executada. Podemos torná-lo
+  genérico para permitir que funcione com qualquer *future*.
+- Seu segundo parâmetro será o tempo máximo de espera. Se usarmos uma
+  `Duration`, será fácil repassá-la para `trpl::sleep`.
+- Ela deve retornar um `Result`. Se a *future* concluir com sucesso, o `Result`
+  será `Ok` com o valor produzido pela *future*. Se o tempo limite esgotar
+  primeiro, o `Result` será `Err` com a duração pela qual o *timeout* esperou.
 
-Listing 17-19 shows this declaration.
+A Listagem 17-19 mostra essa declaração.
 
 <!-- This is not tested because it intentionally does not compile. -->
 
-<Listing number="17-19" caption="Defining the signature of `timeout`" file-name="src/main.rs">
+<Listing number="17-19" caption="Definindo a assinatura de `timeout`" file-name="src/main.rs">
 
 ```rust,ignore,does_not_compile
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-19/src/main.rs:declaration}}
@@ -198,15 +205,16 @@ Listing 17-19 shows this declaration.
 
 </Listing>
 
-That satisfies our goals for the types. Now let’s think about the _behavior_ we
-need: we want to race the future passed in against the duration. We can use
-`trpl::sleep` to make a timer future from the duration, and use `trpl::select`
-to run that timer with the future the caller passes in.
+Isso atende aos nossos objetivos para os tipos. Agora vamos pensar no
+*comportamento* de que precisamos: queremos colocar a *future* passada em
+disputa contra a duração. Podemos usar `trpl::sleep` para criar uma *future* de
+temporizador a partir da duração e usar `trpl::select` para executar esse
+temporizador junto com a *future* que o chamador passar.
 
-In Listing 17-20, we implement `timeout` by matching on the result of awaiting
-`trpl::select`.
+Na Listagem 17-20, implementamos `timeout` fazendo `match` no resultado de
+aguardar `trpl::select`.
 
-<Listing number="17-20" caption="Defining `timeout` with `select` and `sleep`" file-name="src/main.rs">
+<Listing number="17-20" caption="Definindo `timeout` com `select` e `sleep`" file-name="src/main.rs">
 
 ```rust
 {{#rustdoc_include ../listings/ch17-async-await/listing-17-20/src/main.rs:implementation}}
@@ -214,36 +222,39 @@ In Listing 17-20, we implement `timeout` by matching on the result of awaiting
 
 </Listing>
 
-The implementation of `trpl::select` is not fair: it always polls arguments in
-the order in which they are passed (other `select` implementations will
-randomly choose which argument to poll first). Thus, we pass `future_to_try` to
-`select` first so it gets a chance to complete even if `max_time` is a very
-short duration. If `future_to_try` finishes first, `select` will return `Left`
-with the output from `future_to_try`. If `timer` finishes first, `select` will
-return `Right` with the timer’s output of `()`.
+A implementação de `trpl::select` não é justa: ela sempre faz *polling* dos
+argumentos na ordem em que são passados (outras implementações de `select`
+escolhem aleatoriamente qual argumento consultar primeiro). Assim, passamos
+`future_to_try` primeiro para `select` para que ela tenha a chance de concluir
+mesmo se `max_time` for uma duração muito curta. Se `future_to_try` terminar
+primeiro, `select` retornará `Left` com a saída de `future_to_try`. Se `timer`
+terminar primeiro, `select` retornará `Right` com a saída do temporizador, que
+é `()`.
 
-If the `future_to_try` succeeds and we get a `Left(output)`, we return
-`Ok(output)`. If the sleep timer elapses instead and we get a `Right(())`, we
-ignore the `()` with `_` and return `Err(max_time)` instead.
+Se `future_to_try` tiver sucesso e obtivermos um `Left(output)`, retornamos
+`Ok(output)`. Se, em vez disso, o temporizador de espera esgotar e obtivermos
+um `Right(())`, ignoramos o `()` com `_` e retornamos `Err(max_time)`.
 
-With that, we have a working `timeout` built out of two other async helpers. If
-we run our code, it will print the failure mode after the timeout:
+Com isso, temos uma função `timeout` funcional construída a partir de outros
+dois auxiliares assíncronos. Se executarmos nosso código, ele imprimirá o modo
+de falha após o tempo limite:
 
 ```text
 Failed after 2 seconds
 ```
 
-Because futures compose with other futures, you can build really powerful tools
-using smaller async building blocks. For example, you can use this same
-approach to combine timeouts with retries, and in turn use those with
-operations such as network calls (such as those in Listing 17-5).
+Como *futures* se compõem com outras *futures*, você pode construir ferramentas
+realmente poderosas usando blocos de construção assíncronos menores. Por
+exemplo, você pode usar essa mesma abordagem para combinar *timeouts* com novas
+tentativas (*retries*) e, por sua vez, usá-los com operações como chamadas de
+rede (como as da Listagem 17-5).
 
-In practice, you’ll usually work directly with `async` and `await`, and
-secondarily with functions such as `select` and macros such as the `join!`
-macro to control how the outermost futures are executed.
+Na prática, você normalmente trabalhará diretamente com `async` e `await` e,
+secundariamente, com funções como `select` e macros como a macro `join!` para
+controlar como as *futures* mais externas são executadas.
 
-We’ve now seen a number of ways to work with multiple futures at the same time.
-Up next, we’ll look at how we can work with multiple futures in a sequence over
-time with _streams_.
+Já vimos várias maneiras de trabalhar com múltiplas *futures* ao mesmo tempo. A
+seguir, veremos como podemos trabalhar com múltiplas *futures* em sequência ao
+longo do tempo usando *streams*.
 
 [async-program]: ch17-01-futures-and-syntax.html#our-first-async-program

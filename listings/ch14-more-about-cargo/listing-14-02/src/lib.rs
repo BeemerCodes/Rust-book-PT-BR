@@ -1,10 +1,10 @@
 // ANCHOR: here
 //! # My Crate
 //!
-//! `my_crate` is a collection of utilities to make performing certain
-//! calculations more convenient.
+//! `my_crate` é uma coleção de utilitários para tornar a realização de certos
+//! cálculos mais conveniente.
 
-/// Adds one to the number given.
+/// Adiciona um ao número fornecido.
 // --snip--
 // ANCHOR_END: here
 ///

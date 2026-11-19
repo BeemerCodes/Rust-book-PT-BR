@@ -1,30 +1,30 @@
 fn main() {
-    let s1 = gives_ownership();        // gives_ownership moves its return
-                                       // value into s1
+    let s1 = gives_ownership();        // gives_ownership move seu valor de
+                                       // retorno para s1
 
-    let s2 = String::from("hello");    // s2 comes into scope
+    let s2 = String::from("hello");    // s2 entra em escopo
 
-    let s3 = takes_and_gives_back(s2); // s2 is moved into
-                                       // takes_and_gives_back, which also
-                                       // moves its return value into s3
-} // Here, s3 goes out of scope and is dropped. s2 was moved, so nothing
-  // happens. s1 goes out of scope and is dropped.
+    let s3 = takes_and_gives_back(s2); // s2 é movida para
+                                       // takes_and_gives_back, que também
+                                       // move seu valor de retorno para s3
+} // Aqui, s3 sai de escopo e é descartada. s2 foi movida, então nada
+  // acontece. s1 sai de escopo e é descartada.
 
-fn gives_ownership() -> String {       // gives_ownership will move its
-                                       // return value into the function
-                                       // that calls it
+fn gives_ownership() -> String {       // gives_ownership vai mover seu
+                                       // valor de retorno para a função
+                                       // que a chamar
 
-    let some_string = String::from("yours"); // some_string comes into scope
+    let some_string = String::from("yours"); // some_string entra em escopo
 
-    some_string                        // some_string is returned and
-                                       // moves out to the calling
-                                       // function
+    some_string                        // some_string é retornada e
+                                       // movida para fora, para a função
+                                       // chamadora
 }
 
-// This function takes a String and returns a String.
+// Esta função recebe uma String e retorna uma String.
 fn takes_and_gives_back(a_string: String) -> String {
-    // a_string comes into
-    // scope
+    // a_string entra em
+    // escopo
 
-    a_string  // a_string is returned and moves out to the calling function
+    a_string  // a_string é retornada e movida para fora, para a função chamadora
 }

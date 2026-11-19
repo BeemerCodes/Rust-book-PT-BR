@@ -1,17 +1,11 @@
-## Processing a Series of Items with Iterators
+<a id="processing-a-series-of-items-with-iterators"></a>
+## Processando uma Série de Itens com Iteradores
 
-The iterator pattern allows you to perform some task on a sequence of items in
-turn. An iterator is responsible for the logic of iterating over each item and
-determining when the sequence has finished. When you use iterators, you don’t
-have to reimplement that logic yourself.
+O padrão de iterador permite realizar alguma tarefa sobre uma sequência de itens, um por vez. Um iterador é responsável pela lógica de iterar sobre cada item e determinar quando a sequência chegou ao fim. Quando você usa iteradores, não precisa reimplementar essa lógica manualmente.
 
-In Rust, iterators are _lazy_, meaning they have no effect until you call
-methods that consume the iterator to use it up. For example, the code in
-Listing 13-10 creates an iterator over the items in the vector `v1` by calling
-the `iter` method defined on `Vec<T>`. This code by itself doesn’t do anything
-useful.
+Em Rust, os iteradores são *preguiçosos* (*lazy*), o que significa que eles não têm efeito nenhum até que você chame métodos que consumam o iterador para utilizá-lo. Por exemplo, o código da Listagem 13-10 cria um iterador sobre os itens do vetor `v1` chamando o método `iter` definido em `Vec<T>`. Esse código por si só não faz nada de útil.
 
-<Listing number="13-10" file-name="src/main.rs" caption="Creating an iterator">
+<Listing number="13-10" file-name="src/main.rs" caption="Criando um iterador">
 
 ```rust
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-10/src/main.rs:here}}
@@ -19,18 +13,11 @@ useful.
 
 </Listing>
 
-The iterator is stored in the `v1_iter` variable. Once we’ve created an
-iterator, we can use it in a variety of ways. In Listing 3-5, we iterated over
-an array using a `for` loop to execute some code on each of its items. Under
-the hood, this implicitly created and then consumed an iterator, but we glossed
-over how exactly that works until now.
+O iterador é armazenado na variável `v1_iter`. Depois de criar um iterador, podemos usá-lo de várias maneiras. Na Listagem 3-5, iteramos sobre um array usando um laço `for` para executar algum código em cada um de seus itens. Por baixo dos panos, isso criava e consumia um iterador implicitamente, mas até agora não tínhamos entrado nos detalhes de como isso funciona.
 
-In the example in Listing 13-11, we separate the creation of the iterator from
-the use of the iterator in the `for` loop. When the `for` loop is called using
-the iterator in `v1_iter`, each element in the iterator is used in one
-iteration of the loop, which prints out each value.
+No exemplo da Listagem 13-11, separamos a criação do iterador do seu uso no laço `for`. Quando o laço `for` é executado usando o iterador em `v1_iter`, cada elemento do iterador é usado em uma iteração do laço, imprimindo cada valor.
 
-<Listing number="13-11" file-name="src/main.rs" caption="Using an iterator in a `for` loop">
+<Listing number="13-11" file-name="src/main.rs" caption="Usando um iterador em um laço `for`">
 
 ```rust
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-11/src/main.rs:here}}
@@ -38,21 +25,14 @@ iteration of the loop, which prints out each value.
 
 </Listing>
 
-In languages that don’t have iterators provided by their standard libraries,
-you would likely write this same functionality by starting a variable at index
-0, using that variable to index into the vector to get a value, and
-incrementing the variable value in a loop until it reached the total number of
-items in the vector.
+Em linguagens que não oferecem iteradores na biblioteca padrão, você provavelmente escreveria essa mesma funcionalidade iniciando uma variável no índice 0, usando essa variável para indexar o vetor e obter um valor, e incrementando a variável em um laço até atingir o número total de itens do vetor.
 
-Iterators handle all of that logic for you, cutting down on repetitive code you
-could potentially mess up. Iterators give you more flexibility to use the same
-logic with many different kinds of sequences, not just data structures you can
-index into, like vectors. Let’s examine how iterators do that.
+Os iteradores cuidam de toda essa lógica para você, eliminando código repetitivo onde é fácil errar. Eles também dão mais flexibilidade para usar a mesma lógica com vários tipos diferentes de sequências, não apenas estruturas de dados indexáveis como vetores. Vamos ver como os iteradores fazem isso.
 
-### The `Iterator` Trait and the `next` Method
+<a id="the-iterator-trait-and-the-next-method"></a>
+### O Trait `Iterator` e o Método `next`
 
-All iterators implement a trait named `Iterator` that is defined in the
-standard library. The definition of the trait looks like this:
+Todos os iteradores implementam um *trait* chamado `Iterator`, definido na biblioteca padrão. A definição do *trait* é assim:
 
 ```rust
 pub trait Iterator {
@@ -64,23 +44,13 @@ pub trait Iterator {
 }
 ```
 
-Notice that this definition uses some new syntax: `type Item` and `Self::Item`,
-which are defining an associated type with this trait. We’ll talk about
-associated types in depth in Chapter 20. For now, all you need to know is that
-this code says implementing the `Iterator` trait requires that you also define
-an `Item` type, and this `Item` type is used in the return type of the `next`
-method. In other words, the `Item` type will be the type returned from the
-iterator.
+Note que essa definição usa uma sintaxe nova: `type Item` e `Self::Item`, que definem um tipo associado a esse *trait*. Falaremos em detalhes sobre tipos associados no Capítulo 20. Por enquanto, tudo o que você precisa saber é que esse código diz que implementar o *trait* `Iterator` exige que você também defina um tipo `Item`, e esse tipo `Item` é usado no tipo de retorno do método `next`. Em outras palavras, `Item` será o tipo retornado pelo iterador.
 
-The `Iterator` trait only requires implementors to define one method: the
-`next` method, which returns one item of the iterator at a time, wrapped in
-`Some`, and, when iteration is over, returns `None`.
+O *trait* `Iterator` exige que quem o implementa defina apenas um método: o método `next`, que retorna um item do iterador por vez, envolvido em `Some`, e, quando a iteração termina, retorna `None`.
 
-We can call the `next` method on iterators directly; Listing 13-12 demonstrates
-what values are returned from repeated calls to `next` on the iterator created
-from the vector.
+Podemos chamar o método `next` diretamente em iteradores; a Listagem 13-12 demonstra quais valores são retornados por chamadas repetidas a `next` no iterador criado a partir do vetor.
 
-<Listing number="13-12" file-name="src/lib.rs" caption="Calling the `next` method on an iterator">
+<Listing number="13-12" file-name="src/lib.rs" caption="Chamando o método `next` em um iterador">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-12/src/lib.rs:here}}
@@ -88,37 +58,18 @@ from the vector.
 
 </Listing>
 
-Note that we needed to make `v1_iter` mutable: Calling the `next` method on an
-iterator changes internal state that the iterator uses to keep track of where
-it is in the sequence. In other words, this code _consumes_, or uses up, the
-iterator. Each call to `next` eats up an item from the iterator. We didn’t need
-to make `v1_iter` mutable when we used a `for` loop, because the loop took
-ownership of `v1_iter` and made it mutable behind the scenes.
+Note que precisamos tornar `v1_iter` mutável: chamar o método `next` em um iterador altera o estado interno que ele usa para saber em que ponto da sequência está. Em outras palavras, esse código *consome* o iterador. Cada chamada a `next` consome um item do iterador. Não precisamos tornar `v1_iter` mutável quando usamos um laço `for` porque o laço assumiu a *ownership* de `v1_iter` e o tornou mutável por baixo dos panos.
 
-Also note that the values we get from the calls to `next` are immutable
-references to the values in the vector. The `iter` method produces an iterator
-over immutable references. If we want to create an iterator that takes
-ownership of `v1` and returns owned values, we can call `into_iter` instead of
-`iter`. Similarly, if we want to iterate over mutable references, we can call
-`iter_mut` instead of `iter`.
+Note também que os valores obtidos pelas chamadas a `next` são referências imutáveis para os valores no vetor. O método `iter` produz um iterador sobre referências imutáveis. Se quisermos criar um iterador que assuma a *ownership* de `v1` e retorne valores próprios, podemos chamar `into_iter` em vez de `iter`. Da mesma forma, se quisermos iterar sobre referências mutáveis, podemos chamar `iter_mut` em vez de `iter`.
 
-### Methods That Consume the Iterator
+<a id="methods-that-consume-the-iterator"></a>
+### Métodos que Consomem o Iterador
 
-The `Iterator` trait has a number of different methods with default
-implementations provided by the standard library; you can find out about these
-methods by looking in the standard library API documentation for the `Iterator`
-trait. Some of these methods call the `next` method in their definition, which
-is why you’re required to implement the `next` method when implementing the
-`Iterator` trait.
+O *trait* `Iterator` possui vários métodos diferentes com implementações padrão fornecidas pela biblioteca padrão; você pode conhecê-los consultando a documentação da API da biblioteca padrão para o *trait* `Iterator`. Alguns desses métodos chamam `next` em sua definição, e é por isso que você precisa implementar `next` ao implementar o *trait* `Iterator`.
 
-Methods that call `next` are called _consuming adapters_ because calling them
-uses up the iterator. One example is the `sum` method, which takes ownership of
-the iterator and iterates through the items by repeatedly calling `next`, thus
-consuming the iterator. As it iterates through, it adds each item to a running
-total and returns the total when iteration is complete. Listing 13-13 has a
-test illustrating a use of the `sum` method.
+Métodos que chamam `next` são chamados de *adaptadores de consumo* (*consuming adapters*), porque chamá-los esgota o iterador. Um exemplo é o método `sum`, que assume a *ownership* do iterador e percorre os itens chamando `next` repetidamente, consumindo o iterador. Conforme itera, ele soma cada item a um total acumulado e retorna esse total quando a iteração termina. A Listagem 13-13 traz um teste que ilustra o uso do método `sum`.
 
-<Listing number="13-13" file-name="src/lib.rs" caption="Calling the `sum` method to get the total of all items in the iterator">
+<Listing number="13-13" file-name="src/lib.rs" caption="Chamando o método `sum` para obter o total de todos os itens no iterador">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-13/src/lib.rs:here}}
@@ -126,22 +77,16 @@ test illustrating a use of the `sum` method.
 
 </Listing>
 
-We aren’t allowed to use `v1_iter` after the call to `sum`, because `sum` takes
-ownership of the iterator we call it on.
+Não podemos usar `v1_iter` depois da chamada a `sum`, porque `sum` assume a *ownership* do iterador sobre o qual é chamado.
 
-### Methods That Produce Other Iterators
+<a id="methods-that-produce-other-iterators"></a>
+### Métodos que Produzem Outros Iteradores
 
-_Iterator adapters_ are methods defined on the `Iterator` trait that don’t
-consume the iterator. Instead, they produce different iterators by changing
-some aspect of the original iterator.
+*Adaptadores de iterador* (*iterator adapters*) são métodos definidos no *trait* `Iterator` que não consomem o iterador. Em vez disso, eles produzem iteradores diferentes alterando algum aspecto do iterador original.
 
-Listing 13-14 shows an example of calling the iterator adapter method `map`,
-which takes a closure to call on each item as the items are iterated through.
-The `map` method returns a new iterator that produces the modified items. The
-closure here creates a new iterator in which each item from the vector will be
-incremented by 1.
+A Listagem 13-14 mostra um exemplo chamando o adaptador de iterador `map`, que recebe uma *closure* para chamar em cada item conforme eles são percorridos. O método `map` retorna um novo iterador que produz os itens modificados. Aqui, a *closure* cria um novo iterador em que cada item do vetor será incrementado em 1.
 
-<Listing number="13-14" file-name="src/main.rs" caption="Calling the iterator adapter `map` to create a new iterator">
+<Listing number="13-14" file-name="src/main.rs" caption="Chamando o adaptador de iterador `map` para criar um novo iterador">
 
 ```rust,not_desired_behavior
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-14/src/main.rs:here}}
@@ -149,25 +94,19 @@ incremented by 1.
 
 </Listing>
 
-However, this code produces a warning:
+No entanto, esse código gera um aviso (*warning*):
 
 ```console
 {{#include ../listings/ch13-functional-features/listing-13-14/output.txt}}
 ```
 
-The code in Listing 13-14 doesn’t do anything; the closure we’ve specified
-never gets called. The warning reminds us why: Iterator adapters are lazy, and
-we need to consume the iterator here.
+O código da Listagem 13-14 não faz nada; a *closure* que especificamos nunca chega a ser chamada. O aviso nos lembra o motivo: adaptadores de iterador são preguiçosos, e precisamos consumir o iterador aqui.
 
-To fix this warning and consume the iterator, we’ll use the `collect` method,
-which we used with `env::args` in Listing 12-1. This method consumes the
-iterator and collects the resultant values into a collection data type.
+Para corrigir esse aviso e consumir o iterador, usaremos o método `collect`, que usamos com `env::args` na Listagem 12-1. Esse método consome o iterador e reúne os valores resultantes em um tipo de dados de coleção.
 
-In Listing 13-15, we collect the results of iterating over the iterator that’s
-returned from the call to `map` into a vector. This vector will end up
-containing each item from the original vector, incremented by 1.
+Na Listagem 13-15, coletamos em um vetor os resultados da iteração sobre o iterador retornado pela chamada a `map`. Esse vetor terminará contendo cada item do vetor original incrementado em 1.
 
-<Listing number="13-15" file-name="src/main.rs" caption="Calling the `map` method to create a new iterator, and then calling the `collect` method to consume the new iterator and create a vector">
+<Listing number="13-15" file-name="src/main.rs" caption="Chamando o método `map` para criar um novo iterador e depois chamando `collect` para consumir o novo iterador e criar um vetor">
 
 ```rust
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-15/src/main.rs:here}}
@@ -175,35 +114,24 @@ containing each item from the original vector, incremented by 1.
 
 </Listing>
 
-Because `map` takes a closure, we can specify any operation we want to perform
-on each item. This is a great example of how closures let you customize some
-behavior while reusing the iteration behavior that the `Iterator` trait
-provides.
+Como `map` recebe uma *closure*, podemos especificar qualquer operação que quisermos executar em cada item. Esse é um ótimo exemplo de como *closures* permitem personalizar comportamentos enquanto reutilizamos o mecanismo de iteração fornecido pelo *trait* `Iterator`.
 
-You can chain multiple calls to iterator adapters to perform complex actions in
-a readable way. But because all iterators are lazy, you have to call one of the
-consuming adapter methods to get results from calls to iterator adapters.
+Você pode encadear várias chamadas a adaptadores de iterador para realizar ações complexas de maneira legível. Mas, como todos os iteradores são preguiçosos, você precisa chamar um dos métodos adaptadores de consumo para obter resultados das chamadas aos adaptadores de iterador.
 
 <!-- Old headings. Do not remove or links may break. -->
 
 <a id="using-closures-that-capture-their-environment"></a>
 
-### Closures That Capture Their Environment
+<a id="closures-that-capture-their-environment"></a>
+### Closures que Capturam o Ambiente
 
-Many iterator adapters take closures as arguments, and commonly the closures
-we’ll specify as arguments to iterator adapters will be closures that capture
-their environment.
+Muitos adaptadores de iterador recebem *closures* como argumentos e, comumente, essas *closures* capturam valores do ambiente.
 
-For this example, we’ll use the `filter` method that takes a closure. The
-closure gets an item from the iterator and returns a `bool`. If the closure
-returns `true`, the value will be included in the iterator produced by
-`filter`. If the closure returns `false`, the value won’t be included.
+Para este exemplo, vamos usar o método `filter`, que recebe uma *closure*. A *closure* recebe um item do iterador e retorna um `bool`. Se a *closure* retornar `true`, o valor será incluído no iterador produzido por `filter`. Se retornar `false`, o valor não será incluído.
 
-In Listing 13-16, we use `filter` with a closure that captures the `shoe_size`
-variable from its environment to iterate over a collection of `Shoe` struct
-instances. It will return only shoes that are the specified size.
+Na Listagem 13-16, usamos `filter` com uma *closure* que captura a variável `shoe_size` do ambiente para iterar sobre uma coleção de instâncias da *struct* `Shoe`. A função retornará apenas os calçados do tamanho especificado.
 
-<Listing number="13-16" file-name="src/lib.rs" caption="Using the `filter` method with a closure that captures `shoe_size`">
+<Listing number="13-16" file-name="src/lib.rs" caption="Usando o método `filter` com uma *closure* que captura `shoe_size`">
 
 ```rust,noplayground
 {{#rustdoc_include ../listings/ch13-functional-features/listing-13-16/src/lib.rs}}
@@ -211,19 +139,10 @@ instances. It will return only shoes that are the specified size.
 
 </Listing>
 
-The `shoes_in_size` function takes ownership of a vector of shoes and a shoe
-size as parameters. It returns a vector containing only shoes of the specified
-size.
+A função `shoes_in_size` assume a *ownership* de um vetor de calçados e de um tamanho como parâmetros, retornando um vetor contendo apenas os calçados do tamanho especificado.
 
-In the body of `shoes_in_size`, we call `into_iter` to create an iterator that
-takes ownership of the vector. Then, we call `filter` to adapt that iterator
-into a new iterator that only contains elements for which the closure returns
-`true`.
+No corpo de `shoes_in_size`, chamamos `into_iter` para criar um iterador que assume a *ownership* do vetor. Em seguida, chamamos `filter` para adaptar esse iterador em um novo iterador que contém apenas os elementos para os quais a *closure* retorna `true`.
 
-The closure captures the `shoe_size` parameter from the environment and
-compares the value with each shoe’s size, keeping only shoes of the size
-specified. Finally, calling `collect` gathers the values returned by the
-adapted iterator into a vector that’s returned by the function.
+A *closure* captura o parâmetro `shoe_size` do ambiente e compara o valor com o tamanho de cada calçado, mantendo apenas os do tamanho desejado. Por fim, chamar `collect` reúne os valores retornados pelo iterador adaptado em um vetor que é retornado pela função.
 
-The test shows that when we call `shoes_in_size`, we get back only shoes that
-have the same size as the value we specified.
+O teste mostra que, quando chamamos `shoes_in_size`, recebemos de volta apenas os calçados que têm o mesmo tamanho que o valor especificado.

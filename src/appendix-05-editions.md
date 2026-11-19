@@ -1,59 +1,65 @@
-## Appendix E: Editions
+<a id="appendix-e-editions"></a>
+## Apêndice E: Edições
 
-In Chapter 1, you saw that `cargo new` adds a bit of metadata to your
-_Cargo.toml_ file about an edition. This appendix talks about what that means!
+No Capítulo 1, você viu que `cargo new` adiciona alguns metadados ao seu arquivo
+_Cargo.toml_ sobre uma edição (*edition*). Este apêndice explica o que isso
+significa!
 
-The Rust language and compiler have a six-week release cycle, meaning users get
-a constant stream of new features. Other programming languages release larger
-changes less often; Rust releases smaller updates more frequently. After a
-while, all of these tiny changes add up. But from release to release, it can be
-difficult to look back and say, “Wow, between Rust 1.10 and Rust 1.31, Rust has
-changed a lot!”
+A linguagem e o compilador Rust têm um ciclo de lançamento de seis semanas, o
+que significa que as pessoas usuárias recebem um fluxo constante de novos
+recursos. Outras linguagens de programação lançam mudanças maiores com menos
+frequência; o Rust lança atualizações menores com mais frequência. Depois de um
+tempo, todas essas pequenas mudanças se acumulam. Mas, de um lançamento para o
+outro, pode ser difícil olhar para trás e dizer: “Nossa, entre o Rust 1.10 e o
+Rust 1.31, o Rust mudou bastante!”
 
-Every three years or so, the Rust team produces a new Rust _edition_. Each
-edition brings together the features that have landed into a clear package with
-fully updated documentation and tooling. New editions ship as part of the usual
-six-week release process.
+Aproximadamente a cada três anos, a equipe do Rust produz uma nova _edição_ do
+Rust. Cada edição reúne os recursos que chegaram à linguagem em um conjunto
+claro, com documentação e ferramentas totalmente atualizadas. As novas edições
+são entregues como parte do processo normal de lançamento a cada seis semanas.
 
-Editions serve different purposes for different people:
+As edições atendem a propósitos diferentes para pessoas diferentes:
 
-- For active Rust users, a new edition brings together incremental changes into
-  an easy-to-understand package.
-- For non-users, a new edition signals that some major advancements have
-  landed, which might make Rust worth another look.
-- For those developing Rust, a new edition provides a rallying point for the
-  project as a whole.
+- Para quem já usa Rust ativamente, uma nova edição reúne mudanças incrementais
+  em um conjunto fácil de entender.
+- Para quem ainda não usa Rust, uma nova edição sinaliza que avanços
+  importantes chegaram, o que pode fazer com que valha a pena dar uma nova
+  olhada na linguagem.
+- Para quem desenvolve o Rust, uma nova edição oferece um ponto de convergência
+  para o projeto como um todo.
 
-At the time of this writing, four Rust editions are available: Rust 2015, Rust
-2018, Rust 2021, and Rust 2024. This book is written using Rust 2024 edition
-idioms.
+No momento em que este livro foi escrito, há quatro edições do Rust
+disponíveis: Rust 2015, Rust 2018, Rust 2021 e Rust 2024. Este livro foi escrito
+utilizando os idiomas da edição Rust 2024.
 
-The `edition` key in _Cargo.toml_ indicates which edition the compiler should
-use for your code. If the key doesn’t exist, Rust uses `2015` as the edition
-value for backward compatibility reasons.
+A chave `edition` no _Cargo.toml_ indica qual edição o compilador deve usar para
+o seu código. Se a chave não existir, o Rust usa `2015` como valor da edição por
+motivos de compatibilidade retroativa.
 
-Each project can opt in to an edition other than the default 2015 edition.
-Editions can contain incompatible changes, such as including a new keyword that
-conflicts with identifiers in code. However, unless you opt in to those
-changes, your code will continue to compile even as you upgrade the Rust
-compiler version you use.
+Cada projeto pode optar por uma edição diferente da edição padrão 2015. As
+edições podem conter mudanças incompatíveis, como a inclusão de uma nova
+palavra-chave que entre em conflito com identificadores no código. No entanto, a
+menos que você opte por adotar essas mudanças, seu código continuará compilando
+mesmo quando você atualizar a versão do compilador Rust utilizada.
 
-All Rust compiler versions support any edition that existed prior to that
-compiler’s release, and they can link crates of any supported editions
-together. Edition changes only affect the way the compiler initially parses
-code. Therefore, if you’re using Rust 2015 and one of your dependencies uses
-Rust 2018, your project will compile and be able to use that dependency. The
-opposite situation, where your project uses Rust 2018 and a dependency uses
-Rust 2015, works as well.
+Todas as versões do compilador Rust dão suporte a qualquer edição que existia
+antes do lançamento daquela versão do compilador, e elas conseguem vincular
+*crates* de quaisquer edições suportadas entre si. Mudanças de edição afetam
+apenas a forma como o compilador faz o parsing inicial do código. Portanto, se
+você estiver usando Rust 2015 e uma de suas dependências usar Rust 2018, seu
+projeto compilará e conseguirá usar essa dependência. A situação oposta, em que
+seu projeto usa Rust 2018 e uma dependência usa Rust 2015, também funciona.
 
-To be clear: Most features will be available on all editions. Developers using
-any Rust edition will continue to see improvements as new stable releases are
-made. However, in some cases, mainly when new keywords are added, some new
-features might only be available in later editions. You will need to switch
-editions if you want to take advantage of such features.
+Para deixar claro: a maioria dos recursos estará disponível em todas as edições.
+Pessoas desenvolvedoras que usam qualquer edição do Rust continuarão vendo
+melhorias à medida que novos lançamentos estáveis forem feitos. Contudo, em
+alguns casos — principalmente quando novas palavras-chave são adicionadas —,
+certos recursos novos podem ficar disponíveis apenas em edições posteriores.
+Você precisará mudar de edição se quiser aproveitar esses recursos.
 
-For more details, see [_The Rust Edition Guide_][edition-guide]. This is a
-complete book that enumerates the differences between editions and explains how
-to automatically upgrade your code to a new edition via `cargo fix`.
+Para mais detalhes, consulte [_The Rust Edition Guide_][edition-guide]. Trata-se
+de um livro completo que enumera as diferenças entre as edições e explica como
+atualizar automaticamente seu código para uma nova edição por meio do comando
+`cargo fix`.
 
 [edition-guide]: https://doc.rust-lang.org/stable/edition-guide

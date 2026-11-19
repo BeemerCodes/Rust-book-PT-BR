@@ -1,17 +1,19 @@
-## Extending Cargo with Custom Commands
+<a id="extending-cargo-with-custom-commands"></a>
+## Estendendo o Cargo com Comandos Personalizados
 
-Cargo is designed so that you can extend it with new subcommands without having
-to modify it. If a binary in your `$PATH` is named `cargo-something`, you can
-run it as if it were a Cargo subcommand by running `cargo something`. Custom
-commands like this are also listed when you run `cargo --list`. Being able to
-use `cargo install` to install extensions and then run them just like the
-built-in Cargo tools is a super-convenient benefit of Cargo’s design!
+O Cargo foi projetado para que você possa estendê-lo com novos subcomandos sem precisar
+modificá-lo. Se um binário no seu `$PATH` se chamar `cargo-algumacoisa`, você pode
+executá-lo como se fosse um subcomando do Cargo executando `cargo algumacoisa`. Comandos
+personalizados como esse também são listados quando você executa `cargo --list`. Poder
+usar `cargo install` para instalar extensões e depois executá-las exatamente como as
+ferramentas nativas do Cargo é um benefício super conveniente do design do Cargo!
 
-## Summary
+<a id="summary"></a>
+## Resumo
 
-Sharing code with Cargo and [crates.io](https://crates.io/)<!-- ignore --> is
-part of what makes the Rust ecosystem useful for many different tasks. Rust’s
-standard library is small and stable, but crates are easy to share, use, and
-improve on a timeline different from that of the language. Don’t be shy about
-sharing code that’s useful to you on [crates.io](https://crates.io/)<!-- ignore
--->; it’s likely that it will be useful to someone else as well!
+Compartilhar código com o Cargo e o [crates.io](https://crates.io/)<!-- ignore --> faz
+parte do que torna o ecossistema Rust útil para tantas tarefas diferentes. A biblioteca
+padrão do Rust é pequena e estável, mas os *crates* são fáceis de compartilhar, usar e
+evoluir em um cronograma diferente do da linguagem. Não tenha receio de
+compartilhar códigos que sejam úteis para você no [crates.io](https://crates.io/)<!-- ignore
+-->; é bem provável que eles sejam úteis para outras pessoas também!

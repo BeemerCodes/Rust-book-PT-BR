@@ -1,4 +1,4 @@
-extern crate trpl; // required for mdbook test
+extern crate trpl; // necessário para o mdbook test
 
 use std::time::Duration;
 
@@ -23,6 +23,6 @@ async fn timeout<F: Future>(
     future_to_try: F,
     max_time: Duration,
 ) -> Result<F::Output, Duration> {
-    // Here is where our implementation will go!
+    // Aqui é onde nossa implementação vai ficar!
 }
 // ANCHOR_END: declaration

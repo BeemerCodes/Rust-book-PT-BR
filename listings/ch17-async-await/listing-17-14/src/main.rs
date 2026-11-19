@@ -1,10 +1,10 @@
-extern crate trpl; // required for mdbook test
+extern crate trpl; // necessário para o mdbook test
 
 use std::{thread, time::Duration};
 
 fn main() {
     trpl::block_on(async {
-        // We will call `slow` here later
+        // Chamaremos `slow` aqui mais tarde
     });
 }
 

@@ -1,30 +1,21 @@
-# The Rust Programming Language
+<a id="the-rust-programming-language"></a>
+# A Linguagem Rust
 
-_by Steve Klabnik, Carol Nichols, and Chris Krycho, with contributions from the
-Rust Community_
+_by Steve Klabnik, Carol Nichols, e Chris Krycho, com contribuições da comunidade Rust_
 
-This version of the text assumes you’re using Rust 1.99.1 (released 2026-10-15)
-or later with `edition = "2024"` in the *Cargo.toml* file of all projects to
-configure them to use Rust 2024 Edition idioms. See the [“Installation” section
-of Chapter 1][install]<!-- ignore --> for instructions on installing or
-updating Rust, and see [Appendix E][appendix-e]<!-- ignore --> for information
-on editions.
+Esta versão do texto assume que você está usando Rust 1.99.1 (lançado em 2026-10-15)
+ou posterior com `edition = "2024"` no arquivo *Cargo.toml* de todos os projetos para configurá‑los para usar as idiomatizações da Edição 2024 do Rust. Consulte a seção [“Instalação” do Capítulo 1][install]<!-- ignore --> para instruções de instalação ou atualização do Rust, e veja [Apêndice E][appendix-e]<!-- ignore --> para informações sobre edições.
 
-The HTML format is available online at
-[https://doc.rust-lang.org/stable/book/](https://doc.rust-lang.org/stable/book/)
-and offline with installations of Rust made with `rustup`; run `rustup doc
---book` to open.
+O formato HTML está disponível online em
+[https://doc.rust-lang.org/stable/book/](https://doc.rust-lang.org/stable/book/) e offline nas instalações do Rust feitas com `rustup`; execute `rustup doc --book` para abrir.
 
-Several community [translations] are also available.
+Várias [traduções] da comunidade também estão disponíveis.
 
-This text is available in [paperback and ebook format from No Starch
-Press][nsprust].
+Este texto está disponível em formato de capa‑dura e ebook na [No Starch Press][nsprust].
 
 [install]: ch01-01-installation.html
 [appendix-e]: appendix-05-editions.html
 [nsprust]: https://nostarch.com/rust-programming-language-3rd-edition
 [translations]: appendix-06-translation.html
 
-> **🚨 Want a more interactive learning experience? Try out a different version
-> of the Rust Book, featuring: quizzes, highlighting, visualizations, and
-> more**: <https://rust-book.cs.brown.edu>
+> **🚨 Quer uma experiência de aprendizado mais interativa? Experimente uma versão diferente do Livro Rust, com: quizzes, realces, visualizações e mais**: <https://rust-book.cs.brown.edu>

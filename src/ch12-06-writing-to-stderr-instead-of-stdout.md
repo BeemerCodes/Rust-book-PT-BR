@@ -2,64 +2,39 @@
 
 <a id="writing-error-messages-to-standard-error-instead-of-standard-output"></a>
 
-## Redirecting Errors to Standard Error
+## Redirecionando Erros para a Saída de Erro Padrão
 
-At the moment, we’re writing all of our output to the terminal using the
-`println!` macro. In most terminals, there are two kinds of output: _standard
-output_ (`stdout`) for general information and _standard error_ (`stderr`) for
-error messages. This distinction enables users to choose to direct the
-successful output of a program to a file but still print error messages to the
-screen.
+No momento, estamos escrevendo toda a nossa saída no terminal usando a *macro* `println!`. Na maioria dos terminais, há dois tipos de saída: _saída padrão_ (`stdout`) para informações gerais e _saída de erro padrão_ (`stderr`) para mensagens de erro. Essa distinção permite que os usuários escolham redirecionar a saída bem-sucedida de um programa para um arquivo, mas ainda vejam as mensagens de erro na tela.
 
-The `println!` macro is only capable of printing to standard output, so we have
-to use something else to print to standard error.
+A *macro* `println!` só consegue imprimir para a saída padrão, então precisamos usar algo diferente para imprimir na saída de erro padrão.
 
-### Checking Where Errors Are Written
+<a id="checking-where-errors-are-written"></a>
+### Verificando Onde os Erros São Escritos
 
-First, let’s observe how the content printed by `minigrep` is currently being
-written to standard output, including any error messages we want to write to
-standard error instead. We’ll do that by redirecting the standard output stream
-to a file while intentionally causing an error. We won’t redirect the standard
-error stream, so any content sent to standard error will continue to display on
-the screen.
+Primeiro, vamos observar como o conteúdo impresso pelo `minigrep` está sendo escrito atualmente na saída padrão, incluindo as mensagens de erro que queremos escrever na saída de erro padrão. Faremos isso redirecionando o fluxo de saída padrão para um arquivo enquanto causamos intencionalmente um erro. Não redirecionaremos o fluxo de saída de erro padrão, então qualquer conteúdo enviado para o erro padrão continuará sendo exibido na tela.
 
-Command line programs are expected to send error messages to the standard error
-stream so that we can still see error messages on the screen even if we
-redirect the standard output stream to a file. Our program is not currently
-well behaved: We’re about to see that it saves the error message output to a
-file instead!
+Programas de linha de comando devem enviar mensagens de erro para o fluxo de erro padrão para que possamos ainda ver as mensagens de erro na tela mesmo que redirecionemos o fluxo de saída padrão para um arquivo. Nosso programa não está se comportando corretamente: vamos ver agora que ele salva a saída da mensagem de erro em um arquivo!
 
-To demonstrate this behavior, we’ll run the program with `>` and the file path,
-_output.txt_, that we want to redirect the standard output stream to. We won’t
-pass any arguments, which should cause an error:
+Para demonstrar esse comportamento, executaremos o programa com `>` e o caminho do arquivo, _output.txt_, para o qual queremos redirecionar o fluxo de saída padrão. Não passaremos nenhum argumento, o que deve causar um erro:
 
 ```console
 $ cargo run > output.txt
 ```
 
-The `>` syntax tells the shell to write the contents of standard output to
-_output.txt_ instead of the screen. We didn’t see the error message we were
-expecting printed to the screen, so that means it must have ended up in the
-file. This is what _output.txt_ contains:
+A sintaxe `>` diz ao shell para escrever o conteúdo da saída padrão em _output.txt_ em vez de na tela. Não vimos a mensagem de erro que esperávamos impressa na tela, então isso significa que deve ter acabado no arquivo. Veja o que _output.txt_ contém:
 
 ```text
 Problem parsing arguments: not enough arguments
 ```
 
-Yup, our error message is being printed to standard output. It’s much more
-useful for error messages like this to be printed to standard error so that
-only data from a successful run ends up in the file. We’ll change that.
+Pois é, nossa mensagem de erro está sendo impressa na saída padrão. É muito mais útil para mensagens de erro como essa serem impressas no erro padrão para que apenas os dados de uma execução bem-sucedida acabem no arquivo. Vamos mudar isso.
 
-### Printing Errors to Standard Error
+<a id="printing-errors-to-standard-error"></a>
+### Imprimindo Erros na Saída de Erro Padrão
 
-We’ll use the code in Listing 12-24 to change how error messages are printed.
-Because of the refactoring we did earlier in this chapter, all the code that
-prints error messages is in one function, `main`. The standard library provides
-the `eprintln!` macro that prints to the standard error stream, so let’s change
-the two places we were calling `println!` to print errors to use `eprintln!`
-instead.
+Usaremos o código da Listagem 12-24 para mudar como as mensagens de erro são impressas. Por causa da refatoração que fizemos anteriormente neste capítulo, todo o código que imprime mensagens de erro está em uma única função, `main`. A biblioteca padrão fornece a *macro* `eprintln!` que imprime no fluxo de saída de erro padrão, então vamos mudar os dois lugares onde estávamos chamando `println!` para imprimir erros para usar `eprintln!` em vez disso.
 
-<Listing number="12-24" file-name="src/main.rs" caption="Writing error messages to standard error instead of standard output using `eprintln!`">
+<Listing number="12-24" file-name="src/main.rs" caption="Escrevendo mensagens de erro na saída de erro padrão em vez da saída padrão usando `eprintln!`">
 
 ```rust,ignore
 {{#rustdoc_include ../listings/ch12-an-io-project/listing-12-24/src/main.rs:here}}
@@ -67,46 +42,35 @@ instead.
 
 </Listing>
 
-Let’s now run the program again in the same way, without any arguments and
-redirecting standard output with `>`:
+Vamos agora executar o programa novamente da mesma forma, sem nenhum argumento e redirecionando a saída padrão com `>`:
 
 ```console
 $ cargo run > output.txt
 Problem parsing arguments: not enough arguments
 ```
 
-Now we see the error onscreen and _output.txt_ contains nothing, which is the
-behavior we expect of command line programs.
+Agora vemos o erro na tela e _output.txt_ não contém nada, que é o comportamento esperado de programas de linha de comando.
 
-Let’s run the program again with arguments that don’t cause an error but still
-redirect standard output to a file, like so:
+Vamos executar o programa novamente com argumentos que não causam erro, mas ainda redirecionando a saída padrão para um arquivo, assim:
 
 ```console
 $ cargo run -- to poem.txt > output.txt
 ```
 
-We won’t see any output to the terminal, and _output.txt_ will contain our
-results:
+Não veremos nenhuma saída no terminal, e _output.txt_ conterá nossos resultados:
 
-<span class="filename">Filename: output.txt</span>
+<span class="filename">Arquivo: output.txt</span>
 
 ```text
 Are you nobody, too?
 How dreary to be somebody!
 ```
 
-This demonstrates that we’re now using standard output for successful output
-and standard error for error output as appropriate.
+Isso demonstra que agora estamos usando a saída padrão para saída bem-sucedida e a saída de erro padrão para saída de erros, como é adequado.
 
-## Summary
+<a id="summary"></a>
+## Resumo
 
-This chapter recapped some of the major concepts you’ve learned so far and
-covered how to perform common I/O operations in Rust. By using command line
-arguments, files, environment variables, and the `eprintln!` macro for printing
-errors, you’re now prepared to write command line applications. Combined with
-the concepts in previous chapters, your code will be well organized, store data
-effectively in the appropriate data structures, handle errors nicely, and be
-well tested.
+Este capítulo recapitulou alguns dos principais conceitos que você aprendeu até agora e abordou como realizar operações comuns de E/S no Rust. Usando argumentos de linha de comando, arquivos, variáveis de ambiente e a *macro* `eprintln!` para imprimir erros, você agora está preparado para escrever aplicações de linha de comando. Combinado com os conceitos dos capítulos anteriores, seu código será bem organizado, armazenará dados de forma eficaz nas estruturas de dados apropriadas, tratará erros de forma elegante e será bem testado.
 
-Next, we’ll explore some Rust features that were influenced by functional
-languages: closures and iterators.
+A seguir, exploraremos alguns recursos do Rust que foram influenciados por linguagens funcionais: *closures* e iteradores.

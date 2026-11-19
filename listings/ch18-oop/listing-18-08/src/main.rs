@@ -9,7 +9,7 @@ struct SelectBox {
 
 impl Draw for SelectBox {
     fn draw(&self) {
-        // code to actually draw a select box
+        // código para realmente desenhar uma caixa de seleção
     }
 }
 // ANCHOR_END: here

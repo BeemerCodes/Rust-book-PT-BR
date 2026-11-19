@@ -1,24 +1,27 @@
-# Functional Language Features: Iterators and Closures
+<a id="functional-language-features-iterators-and-closures"></a>
 
-Rust’s design has taken inspiration from many existing languages and
-techniques, and one significant influence is _functional programming_.
-Programming in a functional style often includes using functions as values by
-passing them in arguments, returning them from other functions, assigning them
-to variables for later execution, and so forth.
+# Recursos de Linguagens Funcionais: Iterators e Closures
 
-In this chapter, we won’t debate the issue of what functional programming is or
-isn’t but will instead discuss some features of Rust that are similar to
-features in many languages often referred to as functional.
+O design do Rust foi inspirado em muitas linguagens e técnicas existentes, e uma
+influência significativa é a _programação funcional_. Programar em estilo
+funcional costuma incluir usar funções como valores: passá-las como argumentos,
+retorná-las de outras funções, atribuí-las a variáveis para execução posterior,
+e assim por diante.
 
-More specifically, we’ll cover:
+Neste capítulo, não vamos debater o que a programação funcional é ou deixa de
+ser. Em vez disso, vamos discutir alguns recursos do Rust que são parecidos com
+recursos de muitas linguagens normalmente chamadas de funcionais.
 
-- _Closures_, a function-like construct you can store in a variable
-- _Iterators_, a way of processing a series of elements
-- How to use closures and iterators to improve the I/O project in Chapter 12
-- The performance of closures and iterators (spoiler alert: They’re faster than
-  you might think!)
+Mais especificamente, vamos abordar:
 
-We’ve already covered some other Rust features, such as pattern matching and
-enums, that are also influenced by the functional style. Because mastering
-closures and iterators is an important part of writing fast, idiomatic, Rust
-code, we’ll devote this entire chapter to them.
+- _Closures_, uma construção parecida com uma função que você pode armazenar em
+  uma variável
+- _Iterators_, uma forma de processar uma série de elementos
+- Como usar closures e iterators para melhorar o projeto de E/S do Capítulo 12
+- O desempenho de closures e iterators (alerta de spoiler: eles são mais rápidos
+  do que você imagina!)
+
+Já vimos outros recursos do Rust, como pattern matching e enums, que também
+são influenciados pelo estilo funcional. Como dominar closures e iterators é
+parte importante de escrever código Rust rápido e idiomático, vamos dedicar este
+capítulo inteiro a eles.
